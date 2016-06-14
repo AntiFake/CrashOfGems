@@ -17,6 +17,7 @@ namespace Match3.Main
     {
         public override List<BlockComponent> GetDestroyedElements(GameField field, BlockComponent touchedBlock)
         {
+            // Кликнутый элемент добавляется в destroy-список.
             List<BlockComponent> destroyList = new List<BlockComponent>() { touchedBlock };
             MatchN(ref destroyList, field, touchedBlock);
             return destroyList;
@@ -27,76 +28,32 @@ namespace Match3.Main
         /// </summary>
         private void MatchN(ref List<BlockComponent> destroyList, GameField field, BlockComponent bc)
         {
-            string spriteName = bc.spriteName;
+            int typeId = bc.typeId;
 
             // Проверка "снизу".
             if (bc.x - 1 >= 0 && field.Field[bc.x - 1, bc.y] != null)
-            {
-                CommitMatch(ref destroyList, field, bc.x - 1, bc.y, spriteName);
-                //var bc_left = field.Field[bc.x - 1, bc.y].GetComponent<BlockComponent>();
-                //if (bc_left != null && bc_left.spriteName == spriteName)
-                //{
-                //    if (destroyList.FirstOrDefault(i => i.x == bc.x - 1 && i.y == bc.y) == null)
-                //    {
-                //        destroyList.Add(bc_left);
-                //        MatchN(ref destroyList, field, bc_left);
-                //    }
-                //}
-            }
+                CommitMatchedBlock(ref destroyList, field, bc.x - 1, bc.y, typeId);
 
             // Проверка "слева".
             if (bc.y - 1 >= 0 && field.Field[bc.x, bc.y - 1] != null)
-            {
-                CommitMatch(ref destroyList, field, bc.x, bc.y - 1, spriteName);
-
-                //var bc_top = field.Field[bc.x, bc.y - 1].GetComponent<BlockComponent>();
-                //if (bc_top != null && bc_top.spriteName == spriteName)
-                //{
-                //    if (destroyList.FirstOrDefault(i => i.x == bc.x && i.y == bc.y - 1) == null)
-                //    {
-                //        destroyList.Add(bc_top);
-                //        MatchN(ref destroyList, field, bc_top);
-                //    }
-                //}
-            }
+                CommitMatchedBlock(ref destroyList, field, bc.x, bc.y - 1, typeId);
 
             // Проверка "сверху".
             if (bc.x + 1 < field.FieldHeight && field.Field[bc.x + 1, bc.y] != null)
-            {
-                CommitMatch(ref destroyList, field, bc.x + 1, bc.y, spriteName);
-
-                //var bc_right = field.Field[bc.x + 1, bc.y].GetComponent<BlockComponent>();
-                //if (bc_right != null && bc_right.spriteName == spriteName)
-                //{
-                //    if (destroyList.FirstOrDefault(i => i.x == bc.x + 1 && i.y == bc.y) == null)
-                //    {
-                //        destroyList.Add(bc_right);
-                //        MatchN(ref destroyList, field, bc_right);
-                //    }
-                //}
-            }
+                CommitMatchedBlock(ref destroyList, field, bc.x + 1, bc.y, typeId);
 
             // Проверка "справа".
             if (bc.y + 1 < field.FieldWidth && field.Field[bc.x, bc.y + 1] != null)
-            {
-                CommitMatch(ref destroyList, field, bc.x, bc.y + 1, spriteName);
-
-                //var bc_bottom = field.Field[bc.x, bc.y + 1].GetComponent<BlockComponent>();
-                //if (bc_bottom != null && bc_bottom.spriteName == spriteName)
-                //{
-                //    if (destroyList.FirstOrDefault(i => i.x == bc.x && i.y == bc.y + 1) == null)
-                //    {
-                //        destroyList.Add(bc_bottom);
-                //        MatchN(ref destroyList, field, bc_bottom);
-                //    }
-                //}
-            }
+                CommitMatchedBlock(ref destroyList, field, bc.x, bc.y + 1, typeId);
         }
 
-        private void CommitMatch(ref List<BlockComponent> destroyList, GameField field, int x, int y, string spriteName)
+        /// <summary>
+        /// Сохранение элемента в destroy-список и рекурсивный запуск функции MatchN.
+        /// </summary>
+        private void CommitMatchedBlock(ref List<BlockComponent> destroyList, GameField field, int x, int y, int typeId)
         {
             var bc = field.Field[x, y].GetComponent<BlockComponent>();
-            if (bc != null && bc.spriteName == spriteName)
+            if (bc != null && bc.typeId == typeId)
             {
                 if (destroyList.FirstOrDefault(i => i.x == x && i.y == y) == null)
                 {
@@ -112,9 +69,12 @@ namespace Match3.Main
     /// </summary>
     public class BombDestroyAlgorithm : DestroyAlgorithm
     {
-        public override List<BlockComponent> GetDestroyedElements(GameField field, BlockComponent touchedBlock)
+        public override List<BlockComponent> GetDestroyedElements(GameField field, BlockComponent bomb)
         {
-            return null;
+            // Бомба добавляется в destroy-список.
+            List<BlockComponent> destroyList = new List<BlockComponent>() { bomb };
+            ExplodeBomb(ref destroyList, field, bomb);
+            return destroyList;
         }
 
         /// <summary>
@@ -123,83 +83,57 @@ namespace Match3.Main
         /// </summary>
         private void ExplodeBomb(ref List<BlockComponent> destroyList, GameField field, BlockComponent bc)
         {
-            int x, y;
+            // Проверка "снизу".
+            if (bc.x - 1 >= 0 && field.Field[bc.x - 1, bc.y] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x - 1, bc.y);
+
+            // Проверка "снизу-слева".
+            if (bc.x - 1 >= 0 && bc.y - 1 >= 0 && field.Field[bc.x - 1, bc.y - 1] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x - 1, bc.y - 1);
 
             // Проверка "слева".
-            if (bc.x - 1 >= 0 && field.Field[bc.x - 1, bc.y] != null)
-            {
-                x = bc.x - 1;
-                y = bc.y;
-                var bc_left = field.Field[x, y].GetComponent<BlockComponent>();
-
-                if (bc_left != null)
-                {
-                    if (destroyList.FirstOrDefault(i => i.x == x && i.y == y) == null)
-                    {
-                        destroyList.Add(bc_left);
-                        // Если рядом также есть бомба --> цепная реакция.
-                        if (bc_left.blockType == BlockType.Bomb)
-                            ExplodeBomb(ref destroyList, field, bc_left);
-                    }
-                }
-            }
+            if (bc.y - 1 >= 0 && field.Field[bc.x, bc.y - 1] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x, bc.y - 1);
 
             // Проверка "слева-сверху".
-            if (bc.x - 1 >= 0 && bc.y + 1 >= 0 && field.Field[bc.x - 1, bc.y + 1] != null)
-            {
-                x = bc.x - 1;
-                y = bc.y + 1;
-                var bc_left_top = field.Field[x, y].GetComponent<BlockComponent>();
-
-                if (bc_left_top != null)
-                {
-                    if (destroyList.FirstOrDefault(i => i.x == x && i.y == y) == null)
-                    {
-                        destroyList.Add(bc_left_top);
-                        if (bc_left_top.blockType == BlockType.Bomb)
-                            ExplodeBomb(ref destroyList, field, bc_left_top);
-                    }
-                }
-            }
+            if (bc.y - 1 >= 0 && bc.x + 1 < field.FieldHeight && field.Field[bc.x + 1, bc.y - 1] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x + 1, bc.y - 1);
 
             // Проверка "сверху".
-            if (bc.y - 1 >= 0 && field.Field[bc.x, bc.y - 1] != null)
-            {
-                y = bc.y - 1;
-                x = bc.x;
-
-                var bc_top = field.Field[x, y].GetComponent<BlockComponent>();
-                if (bc_top != null)
-                {
-                    if (destroyList.FirstOrDefault(i => i.x == bc.x && i.y == bc.y - 1) == null)
-                    {
-                        destroyList.Add(bc_top);
-                        if (bc_top.blockType == BlockType.Bomb)
-                            ExplodeBomb(ref destroyList, field, bc_top);
-                    }
-                }
-            }
+            if (bc.x + 1 < field.FieldHeight && field.Field[bc.x, bc.y] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x + 1, bc.y);
 
             // Проверка "сверху-справа".
-            if (bc.x + 1 < field.FieldHeight && bc.y - 1 >= 0 && field.Field[bc.x, bc.y - 1] != null)
-            {
-                y = bc.y - 1;
-                x = bc.x;
-
-                var bc_top_right = field.Field[x, y].GetComponent<BlockComponent>();
-                if (bc_top_right != null)
-                {
-                    if (destroyList.FirstOrDefault(i => i.x == bc.x && i.y == bc.y - 1) == null)
-                    {
-                        destroyList.Add(bc_top_right);
-                        if (bc_top_right.blockType == BlockType.Bomb)
-                            ExplodeBomb(ref destroyList, field, bc_top_right);
-                    }
-                }
-            }
+            if (bc.x + 1 < field.FieldHeight && bc.y + 1 < field.FieldWidth && field.Field[bc.x + 1, bc.y + 1] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x + 1, bc.y + 1);
 
             // Проверка "справа".
+            if (bc.y + 1 < field.FieldWidth && field.Field[bc.x, bc.y + 1] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x, bc.y + 1);
 
+            // Проверка "справа-снизу".
+            if (bc.x - 1 >= 0 && bc.y + 1 < field.FieldWidth && field.Field[bc.x - 1, bc.y + 1] != null)
+                CommitBombedBlock(ref destroyList, field, bc.x - 1, bc.y + 1);
+        }
+
+        /// <summary>
+        /// Сохранение элементов в destroy-список.
+        /// Если элемент - бомба, то запускается "цепная реакция" в виде рекурсии.
+        /// </summary>
+        private void CommitBombedBlock(ref List<BlockComponent> destroyList, GameField field, int x, int y)
+        {
+            var bc = field.Field[x, y].GetComponent<BlockComponent>();
+
+            if (bc != null)
+            {
+                if (destroyList.FirstOrDefault(i => i.x == x && i.y == y) == null)
+                {
+                    destroyList.Add(bc);
+                    // Если рядом также есть бомба --> цепная реакция.
+                    if (bc.bonus != null && bc.bonus.type == BonusType.Bomb)
+                        ExplodeBomb(ref destroyList, field, bc);
+                }
+            }
         }
     }
 }

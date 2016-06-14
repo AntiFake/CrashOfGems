@@ -4,6 +4,7 @@ using Match3.Cam;
 using Match3.Components;
 using UnityEngine.UI;
 using System;
+using Match3.Classes;
 
 public class GameManager : MonoBehaviour {
 
@@ -18,7 +19,7 @@ public class GameManager : MonoBehaviour {
 	public float blockAnimationSpeed = 5f;
 
 	[Header("Спрайты плиток")]
-	public Sprite[] sprites;
+	public BlockSprite[] sprites;
 
 	[Header("Игровая камера")]
 	public Camera cam;

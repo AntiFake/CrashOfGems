@@ -2,6 +2,7 @@
 using Match3.Components;
 using System.Collections.Generic;
 using System.Linq;
+using Match3.Classes;
 
 namespace Match3.Main
 {
@@ -15,8 +16,9 @@ namespace Match3.Main
             { 0, 1, 2, 3 }
         };
         private bool isDebug = false;
+        private double bombProbability = 0.1;
 
-        private Sprite[] sprites;
+        private BlockSprite[] sprites;
         private float spriteWidth;
         private float spriteHeight;
         private GameManager gameManager;
@@ -54,7 +56,7 @@ namespace Match3.Main
         }
         #endregion
 
-        public GameField(GameManager gm, int width, int height, Sprite[] sprites)
+        public GameField(GameManager gm, int width, int height, BlockSprite[] sprites)
         {
             this.sprites = sprites;
             this.width = width;
@@ -62,8 +64,8 @@ namespace Match3.Main
             this.gameManager = gm;
 
             rnd = new System.Random();
-            spriteWidth = sprites[0].bounds.size.x;
-            spriteHeight = sprites[0].bounds.size.y;
+            spriteWidth = sprites[0].blockSprite.bounds.size.x;
+            spriteHeight = sprites[0].blockSprite.bounds.size.y;
 
             if (isDebug)
             {
@@ -106,13 +108,13 @@ namespace Match3.Main
             block.transform.position = new Vector3(pos.x, pos.y, 0f);
 
             SpriteRenderer sr = block.AddComponent<SpriteRenderer>();
-            sr.sprite = sprites[spriteNum];
+            sr.sprite = sprites[spriteNum].blockSprite;
 
             BoxCollider2D c = block.AddComponent<BoxCollider2D>();
             BlockComponent b = block.AddComponent<BlockComponent>();
             b.x = x;
             b.y = y;
-            b.spriteName = sr.sprite.name;
+            b.typeId = spriteNum;
             b.gameManager = gameManager;
 
             return block;
@@ -149,16 +151,40 @@ namespace Match3.Main
             block.name = string.Format("{0};{1}", x, y);
             block.transform.position = new Vector3(pos.x, pos.y, 0f);
 
+            int spriteNumber = GetRandomSpriteNumber();
             SpriteRenderer sr = block.AddComponent<SpriteRenderer>();
-            sr.sprite = GetRandomSprite();
+
+            double pr = rnd.NextDouble() * (1 - 0) + 0;
+            if (pr >= bombProbability)
+            {
+                sr.sprite = sprites[spriteNumber].blockSprite;
+            }
+            else
+            {
+                sr.sprite = sprites[spriteNumber].bombSprite;
+            }
 
             BoxCollider2D c = block.AddComponent<BoxCollider2D>();
             BlockComponent b = block.AddComponent<BlockComponent>();
             b.x = x;
             b.y = y;
-            b.spriteName = sr.sprite.name;
+            b.typeId = spriteNumber;
             b.gameManager = gameManager;
-            b.blockType = BlockType.Block;
+
+            if (pr >= bombProbability)
+            {
+                b.bonus = new BonusComponent()
+                {
+                    type = BonusType.None
+                };
+            }
+            else
+            {
+                b.bonus = new BonusComponent()
+                {
+                    type = BonusType.Bomb
+                };
+            }
 
             return block;
         }
@@ -167,9 +193,9 @@ namespace Match3.Main
         /// Получение случайного спрайта из коллекции.
         /// </summary>
         /// <returns></returns>
-        private Sprite GetRandomSprite()
+        private int GetRandomSpriteNumber()
         {
-            return sprites[rnd.Next(0, sprites.Length)];
+            return rnd.Next(0, sprites.Length);
         }
         #endregion
 
@@ -316,11 +342,9 @@ namespace Match3.Main
         #endregion
 
         #region Валидация игрового поля
-
         /// <summary>
         /// Проверяет, остались ли ходы на поле.
         /// </summary>
-        /// <returns></returns>
         public bool ValidateField()
         {
             List<string> matchList = new List<string>();
@@ -345,78 +369,48 @@ namespace Match3.Main
         /// <summary>
         /// Рекурсивная проверка каждого блока на существование возможности хода.
         /// </summary>
-        /// <param name="matchList"></param>
-        /// <param name="bc"></param>
         private void ValidateBlock(ref List<string> matchList, BlockComponent bc)
         {
             if (matchList.Count >= gameManager.matchCount)
                 return;
 
-            string type = bc.spriteName;
+            int typeId = bc.typeId;
 
-            // Проверка слева.
+            // Проверка "cнизу".
             if (bc.x - 1 >= 0 && field[bc.x - 1, bc.y] != null)
-            {
-                var bc_left = field[bc.x - 1, bc.y].GetComponent<BlockComponent>();
-                if (bc_left != null && bc_left.spriteName == type)
-                {
-                    string blockName = string.Format("{0};{1}", bc.x - 1, bc.y);
-                    if (matchList.FirstOrDefault(i => i == blockName) == null)
-                    {
-                        matchList.Add(blockName);
-                        ValidateBlock(ref matchList, bc_left);
-                    }
-                }
-            }
+                CommitBlockValidation(ref matchList, bc.x - 1, bc.y, bc.typeId);
 
-            // Проверка сверху.
+            // Проверка "слева".
             if (bc.y - 1 >= 0 && field[bc.x, bc.y - 1] != null)
-            {
-                var bc_top = field[bc.x, bc.y - 1].GetComponent<BlockComponent>();
-                if (bc_top != null && bc_top.spriteName == type)
-                {
-                    string blockName = string.Format("{0};{1}", bc.x, bc.y - 1);
-                    if (matchList.FirstOrDefault(i => i == blockName) == null)
-                    {
-                        matchList.Add(blockName);
-                        ValidateBlock(ref matchList, bc_top);
-                    }
-                }
-            }
+                CommitBlockValidation(ref matchList, bc.x, bc.y - 1, bc.typeId);
 
-            // Проверка справа.
+            // Проверка "сверху".
             if (bc.x + 1 < height && field[bc.x + 1, bc.y] != null)
-            {
-                var bc_right = field[bc.x + 1, bc.y].GetComponent<BlockComponent>();
-                if (bc_right != null && bc_right.spriteName == type)
-                {
-                    string blockName = string.Format("{0};{1}", bc.x + 1, bc.y);
-                    if (matchList.FirstOrDefault(i => i == blockName) == null)
-                    {
-                        matchList.Add(blockName);
-                        ValidateBlock(ref matchList, bc_right);
-                    }
-                }
-            }
+                CommitBlockValidation(ref matchList, bc.x + 1, bc.y, bc.typeId);
 
-            // Проверка снизу.
+            // Проверка "справа".
             if (bc.y + 1 < width && field[bc.x, bc.y + 1] != null)
-            {
-                var bc_bottom = field[bc.x, bc.y + 1].GetComponent<BlockComponent>();
-                if (bc_bottom != null && bc_bottom.spriteName == type)
-                {
-                    string blockName = string.Format("{0};{1}", bc.x, bc.y + 1);
-                    if (matchList.FirstOrDefault(i => i == blockName) == null)
-                    {
-                        matchList.Add(blockName);
-                        ValidateBlock(ref matchList, bc_bottom);
-                    }
-                }
-            }
+                CommitBlockValidation(ref matchList, bc.x, bc.y + 1, bc.typeId);
 
             return;
         }
 
+        /// <summary>
+        /// Запускает валидацию рекурсивно дальше.
+        /// </summary>
+        private void CommitBlockValidation(ref List<string> matchList, int x, int y, int typeId)
+        {
+            var bc = field[x, y].GetComponent<BlockComponent>();
+            if (bc != null && bc.typeId == typeId)
+            {
+                string blockName = string.Format("{0};{1}", x, y);
+                if (matchList.FirstOrDefault(i => i == blockName) == null)
+                {
+                    matchList.Add(blockName);
+                    ValidateBlock(ref matchList, bc);
+                }
+            }
+        }
         #endregion
 
         #region Управление полем
