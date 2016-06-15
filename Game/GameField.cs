@@ -16,7 +16,6 @@ namespace Match3.Main
             { 0, 1, 2, 3 }
         };
         private bool isDebug = false;
-        private double bombProbability = 0.1;
 
         private BlockSprite[] sprites;
         private float spriteWidth;
@@ -134,7 +133,7 @@ namespace Match3.Main
             {
                 for (int y = 0; y < width; y++)
                 {
-                    field[x, y] = CreateNewBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight));
+                    field[x, y] = CreateNewFieldItem(x, y, new Vector2(y * spriteWidth, x * spriteHeight), BonusType.None);
                 }
             }
         }
@@ -142,51 +141,56 @@ namespace Match3.Main
         /// <summary>
         /// Создание нового block-а.
         /// </summary>
-        /// <param name="name">Наименование.</param>
-        /// <param name="pos">Позиция.</param>
-        /// <returns></returns>
-        private GameObject CreateNewBlock(int x, int y, Vector2 pos)
+        private GameObject CreateNewFieldItem(int x, int y, Vector2 pos, BonusType bonusType)
         {
-            GameObject block = new GameObject();
+            var block = (GameObject)GameObject.Instantiate(gameManager.blockPrefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
+
             block.name = string.Format("{0};{1}", x, y);
-            block.transform.position = new Vector3(pos.x, pos.y, 0f);
-
             int spriteNumber = GetRandomSpriteNumber();
-            SpriteRenderer sr = block.AddComponent<SpriteRenderer>();
 
-            double pr = rnd.NextDouble() * (1 - 0) + 0;
-            if (pr >= bombProbability)
-            {
-                sr.sprite = sprites[spriteNumber].blockSprite;
-            }
-            else
-            {
-                sr.sprite = sprites[spriteNumber].bombSprite;
-            }
+            block = UpdateBlockComponent(block, x, y, spriteNumber);
+            block = UpdateSpriteRendererComponent(block, x, y, spriteNumber, bonusType);
 
-            BoxCollider2D c = block.AddComponent<BoxCollider2D>();
-            BlockComponent b = block.AddComponent<BlockComponent>();
-            b.x = x;
-            b.y = y;
-            b.typeId = spriteNumber;
-            b.gameManager = gameManager;
+            if (bonusType != BonusType.None)
+                AddBonusComponent(block, bonusType);
 
-            if (pr >= bombProbability)
+            return block;
+        }
+
+        private GameObject UpdateBlockComponent(GameObject block, int x, int y, int spriteNumber)
+        {
+            BlockComponent blockComponent = block.GetComponent<BlockComponent>();
+            blockComponent.x = x;
+            blockComponent.y = y;
+            blockComponent.typeId = spriteNumber;
+            blockComponent.gameManager = gameManager;
+
+            return block;
+        }
+
+        private GameObject UpdateSpriteRendererComponent(GameObject block, int x, int y, int spriteNumber, BonusType bonusType)
+        {
+            SpriteRenderer sr = block.GetComponent<SpriteRenderer>();
+
+            switch (bonusType)
             {
-                b.bonus = new BonusComponent()
-                {
-                    type = BonusType.None
-                };
-            }
-            else
-            {
-                b.bonus = new BonusComponent()
-                {
-                    type = BonusType.Bomb
-                };
+                case BonusType.None:
+                    sr.sprite = sprites[spriteNumber].blockSprite;
+                    break;
+                case BonusType.Bomb:
+                    sr.sprite = sprites[spriteNumber].bombSprite;
+                    break;
             }
 
             return block;
+        }
+
+        private GameObject AddBonusComponent(GameObject bonusBlock, BonusType bonusType)
+        {
+            BonusComponent bonus = bonusBlock.AddComponent<BonusComponent>();
+            bonus.type = bonusType;
+
+            return bonusBlock;
         }
 
         /// <summary>
@@ -274,7 +278,7 @@ namespace Match3.Main
                 {
                     if (field[x, y] == null)
                     {
-                        field[x, y] = CreateNewBlock(x, y, new Vector2(y * spriteWidth, (spriteHeight * height) + sortNullX * spriteHeight));
+                        field[x, y] = CreateNewFieldItem(x, y, new Vector2(y * spriteWidth, (spriteHeight * height) + sortNullX * spriteHeight), BonusType.None);
                         sortNullX++;
                     }
                 }

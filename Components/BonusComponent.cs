@@ -6,13 +6,9 @@ namespace Match3.Components
 {
     public enum BonusType { None, Bomb, Light, Multiplication }
 
-    [Serializable]
-    public class BonusComponent
+    public class BonusComponent : MonoBehaviour
     {
-        [SerializeField]
         public BonusType type;
-
-        [SerializeField]
         public int value;
     }
 }

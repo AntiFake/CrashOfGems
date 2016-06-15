@@ -41,6 +41,12 @@ public class GameManager : MonoBehaviour {
 
     [Header("UI контроллер")]
     public GameUIManager UIManager;
+
+    [Header("Префаб блока")]
+    public GameObject blockPrefab;
+
+    [Header("Префаб бомбы")]
+    public GameObject bombPrefab;
     #endregion
 
     private GameField gameField;
@@ -55,12 +61,9 @@ public class GameManager : MonoBehaviour {
     private int currentLevel;
     private bool isPause;
     private bool isGameOver;
-    private MatchDestroyAlgorithm matchDestroyAlgorithm;
 
 	private void Awake ()
 	{
-        matchDestroyAlgorithm = new MatchDestroyAlgorithm();
-
 		audioSource = GetComponent<AudioSource>();
 		audioSource.clip = soundClickEvent;
 
@@ -180,13 +183,13 @@ public class GameManager : MonoBehaviour {
 	public void TouchBlockCallback(BlockComponent touched)
 	{
         // Уничтожение блоков разрешено, только тогда, когда не запущена анимация.
-        if (!gameField.IsRebuildColsOn && !gameField.IsRebuildRowsOn)
+        if (!gameField.IsRebuildColsOn && !gameField.IsRebuildRowsOn && touched.GetComponent<BonusComponent>() == null)
         {
             touchedBlock = touched;
 
             // Уничтожение блоков ип.
             long points;
-            gameField = BlockDestroyer.DestroyBlocks(matchDestroyAlgorithm, gameField, touchedBlock, matchCount, audioSource, out points);
+            gameField = BlockDestroyer.DestroyBlocks(gameField, touchedBlock, matchCount, audioSource, out points);
             levelScore += points;
             totalScore += points;
 
