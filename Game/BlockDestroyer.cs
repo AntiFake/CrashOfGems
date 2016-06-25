@@ -29,7 +29,7 @@ namespace CrashOfGems.Game
 			return field;
 		}
 
-        public static List<BlockComponent> GetDestroyedElements(GameField field, BlockComponent touchedBlock)
+        public static List<BlockComponent> GetMatchedElements(GameField field, BlockComponent touchedBlock)
         {
             List<BlockComponent> destroyList = new List<BlockComponent>() { touchedBlock };
             MatchN(ref destroyList, field, touchedBlock);
@@ -37,21 +37,36 @@ namespace CrashOfGems.Game
         }
 
         #region Алгоритмы уничтожения
+
+        /// <summary>
+        /// Запуск алгоритмов бонусов. Функция вызывается после GetMatchedElements.
+        /// </summary>
+        public static void CommitBonuses(ref List<BlockComponent> matchedBlocks, GameField field)
+        {
+            BonusComponent bonus;
+            BlockComponent[] destroyArray = new BlockComponent[matchedBlocks.Count];
+            matchedBlocks.CopyTo(destroyArray);
+            List<BlockComponent> destroyList = destroyArray.ToList();
+
+            foreach (BlockComponent bc in matchedBlocks)
+            {
+                bonus = bc.GetComponent<BonusComponent>();
+                if (bonus != null)
+                {
+                    if (bonus.type == BonusType.Bomb)
+                        ExplodeBomb(ref destroyList, field, bc);
+                }
+            }
+
+            matchedBlocks = destroyList;
+        }
+
         /// <summary>
         /// Алгоритм поиска сопряженных блоков одного цвета.
         /// </summary>
         private static void MatchN(ref List<BlockComponent> destroyList, GameField field, BlockComponent bc)
         {
             BlockType blockType = bc.type;
-
-            // Проверка на бонусы.
-            var bonusComponent = bc.GetComponent<BonusComponent>();
-            if (bonusComponent != null)
-            {
-                if (bonusComponent.type == BonusType.Bomb)
-                    ExplodeBomb(ref destroyList, field, bc);
-                // ... + еще алгоритмы бонусов.
-            }
 
             // Проверка "снизу".
             if (bc.x - 1 >= 0 && field.Field[bc.x - 1, bc.y] != null)
@@ -109,7 +124,7 @@ namespace CrashOfGems.Game
                 CommitBombedBlock(ref destroyList, field, bc.x + 1, bc.y - 1);
 
             // Проверка "сверху".
-            if (bc.x + 1 < field.FieldHeight && field.Field[bc.x, bc.y] != null)
+            if (bc.x + 1 < field.FieldHeight && field.Field[bc.x + 1, bc.y] != null)
                 CommitBombedBlock(ref destroyList, field, bc.x + 1, bc.y);
 
             // Проверка "сверху-справа".
@@ -147,30 +162,63 @@ namespace CrashOfGems.Game
         #endregion
 
         #region Подсчет очков
-
-        public static int CalculatePoints(List<BlockComponent> destroyedList, int matchCount, int startBlockCost, int costDelta)
+        public static Dictionary<BlockType, long> CalculatePoints(List<BlockComponent> destroyList, int matchCount, int startBlockCost, int costDelta)
         {
-            int bombsCount = destroyedList.Count(i => i.GetComponent<BonusComponent>() != null && i.GetComponent<BonusComponent>().type == BonusType.Bomb);
-            int blocksCount = destroyedList.Count(i => i.GetComponent<BonusComponent>() == null);
-            int points = startBlockCost * matchCount;
+            Dictionary<BlockType, int> destroyedBlocks = (
+                from b in destroyList
+                group b by b.GetComponent<BlockComponent>().type into grp
+                select new { blockType = grp.Key, count = grp.Count() }
+            ).ToDictionary(i => i.blockType, i => i.count);
 
+            Dictionary<BlockType, long> points = new Dictionary<BlockType, long>();
+            var keys = destroyedBlocks.Keys;
+            
+            // Подсчет очков для каждой категории.
+            foreach (var key in keys)
+            {
+                points.Add(key, CalculateBlocksPoints(destroyedBlocks[key], matchCount, startBlockCost, costDelta));
+            }
 
-            if (blocksCount > matchCount)
+            return points;
+        }
+
+        /// <summary>
+        /// Функция для получения общего множителя "умножающих" бонусов.
+        /// </summary>
+        public static int CalculateBonusMultiplier(List<BlockComponent> destroyedList)
+        {
+            var multipliers = destroyedList.Where(i => i.gameObject.GetComponent<BonusComponent>() != null && i.gameObject.GetComponent<BonusComponent>().type == BonusType.Multiplication);
+            if (!multipliers.Any())
+                return 1;
+
+            int total = 1;
+
+            foreach (var m in multipliers)
+            {
+                total *= m.GetComponent<BonusComponent>().value;
+            }
+
+            return total;
+        }
+
+        /// <summary>
+        /// Расчет очков для блоков опред. группы.
+        /// </summary>
+        private static long CalculateBlocksPoints(int blockCount, int matchCount, int startBlockCost, int costDelta)
+        {
+            long points = startBlockCost * matchCount;
+            if (blockCount > matchCount)
             {
                 int sbc = startBlockCost, cd = costDelta;
-                for (int i = matchCount; i < blocksCount; i++)
+                for (int i = matchCount; i < blockCount; i++)
                 {
                     sbc += cd;
                     points += sbc;
                 }
             }
 
-            //Добавить алгоритм.
-            points += (startBlockCost * bombsCount);
-
             return points;
         }
-
         #endregion
     }
 }

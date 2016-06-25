@@ -17,6 +17,12 @@ namespace CrashOfGems.Classes
         public Sprite bombSprite;
 
         [SerializeField]
+        public Sprite multiplicationSprite;
+
+        [SerializeField]
+        public Sprite lightningSprite;
+
+        [SerializeField]
         public BlockType blockType;
     }
 }

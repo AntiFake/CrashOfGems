@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using CrashOfGems.UIComponents;
 using CrashOfGems.Enums;
+using System.Collections.Generic;
 
 namespace CrashOfGems.Management
 {
@@ -99,27 +100,33 @@ namespace CrashOfGems.Management
             finalLevel.text = string.Format("Level: {0}", level);
         }
 
-        public void UpdateVessels(BlockType blocktype, int points)
+        public void UpdateVessels(Dictionary<BlockType, long> points)
         {
-            switch (blocktype)
+            foreach (var key in points.Keys)
             {
-                case BlockType.Red:
-                    redVessel.PourIn(points);
-                    break;
-                case BlockType.Yellow:
-                    yellowVessel.PourIn(points);
-                    break;
-                case BlockType.Blue:
-                    blueVessel.PourIn(points);
-                    break;
+                switch (key)
+                {
+                    case BlockType.Red:
+                        redVessel.PourIn(points[key]);
+                        break;
+                    case BlockType.Yellow:
+                        yellowVessel.PourIn(points[key]);
+                        break;
+                    case BlockType.Blue:
+                        blueVessel.PourIn(points[key]);
+                        break;
+                }
             }
         }
 
         public void EmptyVessels()
         {
-            redVessel.Empty();
-            yellowVessel.Empty();
-            blueVessel.Empty();
+            if (redVessel.IsFullFilled)
+                redVessel.Empty();
+            if (yellowVessel.IsFullFilled)
+                yellowVessel.Empty();
+            if (blueVessel.IsFullFilled)
+                blueVessel.Empty();
         }
 
         #endregion

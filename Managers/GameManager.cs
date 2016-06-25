@@ -5,6 +5,7 @@ using CrashOfGems.Components;
 using CrashOfGems.Classes;
 using System.Collections.Generic;
 using CrashOfGems.Enums;
+using System.Linq;
 
 namespace CrashOfGems.Management
 {
@@ -51,11 +52,20 @@ namespace CrashOfGems.Management
         [Header("Префаб бомбы")]
         public GameObject bombPrefab;
 
+        [Header("Префаб блока")]
+        public GameObject multiplicationPrefab;
+
+        [Header("Префаб бомбы")]
+        public GameObject lightningPrefab;
+
         [Header("Начальная цена за блок")]
         public int startBlockCost = 10;
 
         [Header("Дельта цены за блок")]
         public int deltaBlockCost = 5;
+
+        [Header("Доля от уровня за уничтожения всего поля")]
+        public float fieldDestroyCoefficient = 0.25f;
         #endregion
 
         private GameField gameField;
@@ -173,14 +183,26 @@ namespace CrashOfGems.Management
             // Проверка существования вариантов ходов.
             if (!gameField.ValidateField())
             {
-                UIManager.EmptyVessels();
-
                 // Ходов нет, а поле целое -> уничтожить поле.
-                if (gameField.IsFieldFull)
+                if (gameField.IsFull)
                     gameField = BlockDestroyer.DestroyField(gameField);
 
+                // Начисление очков за полностью уничтоженное поле.
+                if (gameField.IsEmpty)
+                {
+                    totalScore += (long)(fieldDestroyCoefficient * thresholdCurrent);
+                    levelScore += (long)(fieldDestroyCoefficient * thresholdCurrent);
+                    UIManager.SetLevelScore(levelScore);
+                }
+
                 // Обновить ИП.
-                gameField.GenerateNewBlocks();
+                gameField.GenerateNewBlocks(
+                    UIManager.redVessel.BonusCount,
+                    UIManager.yellowVessel.BonusCount,
+                    UIManager.blueVessel.BonusCount
+                );
+
+                UIManager.EmptyVessels();
 
                 // Запустить анимацию.
                 startAnimationTime = Time.time;
@@ -195,20 +217,24 @@ namespace CrashOfGems.Management
         public void TouchBlockCallback(BlockComponent touched)
         {
             // Уничтожение блоков разрешено, только тогда, когда не запущена анимация.
-            if (!gameField.IsRebuildColsOn && !gameField.IsRebuildRowsOn && touched.GetComponent<BonusComponent>() == null)
+            if (!gameField.IsRebuildColsOn && !gameField.IsRebuildRowsOn)
             {
                 touchedBlock = touched;
 
+                Dictionary<BlockType, long> points = new Dictionary<BlockType, long>();
+                int multiplier; // Общее значение бонуса умножения.
+
                 // Уничтожение блоков ип.
-                int points;
-                DestroyBlocks(touched, out points);
+                DestroyBlocks(touched, ref points, out multiplier);
 
                 // Некоторые блоки были уничтожены.
-                if (points > 0)
+                if (points.Any())
                 {
-                    UIManager.UpdateVessels(touched.type, points);
-                    levelScore += points;
-                    totalScore += points;
+                    UIManager.UpdateVessels(points);
+
+                    long pts = GetTotalPoints(points) * multiplier;
+                    levelScore += pts;
+                    totalScore += pts;
 
                     UIManager.SetLevelScore(levelScore);
                     
@@ -220,6 +246,33 @@ namespace CrashOfGems.Management
                     startAnimationTime = Time.time;
                 }
             }
+        }
+
+        /// <summary>
+        /// Уничтожение блоков и обновление "мензурок".
+        /// </summary>
+        private void DestroyBlocks(BlockComponent touched, ref Dictionary<BlockType, long> points, out int multiplier)
+        {
+            multiplier = 1;
+            List<BlockComponent> destroyList = BlockDestroyer.GetMatchedElements(gameField, touched);
+
+            if (destroyList.Count >= matchCount)
+            {
+                BlockDestroyer.CommitBonuses(ref destroyList, gameField);
+                points = BlockDestroyer.CalculatePoints(destroyList, matchCount, startBlockCost, deltaBlockCost);
+                multiplier = BlockDestroyer.CalculateBonusMultiplier(destroyList);
+                audioSource.Play();
+                destroyList.ForEach(i =>
+                {
+                    GameObject.Destroy(i.gameObject);
+                    gameField.Field[i.x, i.y] = null;
+                });
+            }
+        }
+
+        private long GetTotalPoints(Dictionary<BlockType, long> points)
+        {
+            return points.Sum(i => i.Value);
         }
 
         /// <summary>
@@ -240,25 +293,5 @@ namespace CrashOfGems.Management
             gameField.EnableBlockTouch();
         }
         #endregion
-
-        /// <summary>
-        /// Уничтожение блоков и обновление "мензурок".
-        /// </summary>
-        private void DestroyBlocks(BlockComponent touched, out int points)
-        {
-            points = 0;
-            List<BlockComponent> destroyList = BlockDestroyer.GetDestroyedElements(gameField, touched);
-
-            if (destroyList.Count >= matchCount)
-            {
-                points = BlockDestroyer.CalculatePoints(destroyList, matchCount, startBlockCost, deltaBlockCost);
-                audioSource.Play();
-                destroyList.ForEach(i =>
-                {
-                    GameObject.Destroy(i.gameObject);
-                    gameField.Field[i.x, i.y] = null;
-                });
-            }
-        }
     }
 }

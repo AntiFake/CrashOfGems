@@ -10,15 +10,6 @@ namespace CrashOfGems.Game
 {
     public class GameField
     {
-        private int[,] prescribedMatrix = new int[4, 4]
-        {
-            { 0, 1, 0, 0 },
-            { 1, 1, 1, 1 },
-            { 1, 1, 2, 3 },
-            { 0, 1, 2, 3 }
-        };
-        private bool isDebug = false;
-
         private BlockSprite[] sprites;
         private float spriteWidth;
         private float spriteHeight;
@@ -38,7 +29,7 @@ namespace CrashOfGems.Game
         public int FieldWidth { get { return width; } }
         public GameObject[,] Field { get { return field; } set { field = value; } }
         public int FieldHeight { get { return height; } }
-        public bool IsFieldFull
+        public bool IsFull
         {
             get
             {
@@ -55,6 +46,23 @@ namespace CrashOfGems.Game
                 return notNullCount == width * height;
             }
         }
+        public bool IsEmpty
+        {
+            get
+            {
+                for (int x = 0; x < height; x++)
+                {
+                    for (int y = 0; y < width; y++)
+                    {
+                        if (field[x, y] != null)
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+        
         #endregion
 
         public GameField(GameManager gm, int width, int height, BlockSprite[] sprites)
@@ -67,62 +75,8 @@ namespace CrashOfGems.Game
             rnd = new System.Random();
             spriteWidth = sprites[0].blockSprite.bounds.size.x;
             spriteHeight = sprites[0].blockSprite.bounds.size.y;
-
-            //if (isDebug)
-            //{
-            //    this.width = prescribedMatrix.GetLength(0);
-            //    this.height = prescribedMatrix.GetLength(1);
-            //    GeneratePrescribedField();
-            //}
-            //else
-                GenerateField();
+            GenerateField();
         }
-
-        /*
-        #region Debug-генерация
-        /// <summary>
-        /// Генерация нерандомного поля для проверки.
-        /// </summary>
-        private void GeneratePrescribedField()
-        {
-            field = new GameObject[height, width];
-            for (int x = 0; x < height; x++)
-            {
-                for (int y = 0; y < width; y++)
-                {
-                    field[x, y] = CreatePrescribedBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight), prescribedMatrix[x, y]);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Создание блока нерандомного блока.
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="pos"></param>
-        /// <param name="spriteNum"></param>
-        /// <returns></returns>
-        private GameObject CreatePrescribedBlock(int x, int y, Vector2 pos, int spriteNum)
-        {
-            GameObject block = new GameObject();
-            block.name = string.Format("{0};{1}", x, y);
-            block.transform.position = new Vector3(pos.x, pos.y, 0f);
-
-            SpriteRenderer sr = block.AddComponent<SpriteRenderer>();
-            sr.sprite = sprites[spriteNum].blockSprite;
-
-            BoxCollider2D c = block.AddComponent<BoxCollider2D>();
-            BlockComponent b = block.AddComponent<BlockComponent>();
-            b.x = x;
-            b.y = y;
-            b.type = spriteNum;
-            b.gameManager = gameManager;
-
-            return block;
-        }
-        #endregion
-        */
 
         #region Генерация поля
 
@@ -137,7 +91,7 @@ namespace CrashOfGems.Game
             {
                 for (int y = 0; y < width; y++)
                 {
-                    field[x, y] = CreateNewFieldItem(x, y, new Vector2(y * spriteWidth, x * spriteHeight), BonusType.None);
+                    field[x, y] = CreateNewFieldItem(x, y, new Vector2(y * spriteWidth, x * spriteHeight), gameManager.blockPrefab, BonusType.None);
                 }
             }
         }
@@ -145,9 +99,9 @@ namespace CrashOfGems.Game
         /// <summary>
         /// Создание нового block-а.
         /// </summary>
-        private GameObject CreateNewFieldItem(int x, int y, Vector2 pos, BonusType bonusType)
+        private GameObject CreateNewFieldItem(int x, int y, Vector2 pos, GameObject prefab, BonusType bonusType)
         {
-            var block = (GameObject)GameObject.Instantiate(gameManager.blockPrefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
+            var block = (GameObject)GameObject.Instantiate(prefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
 
             block.name = string.Format("{0};{1}", x, y);
             int spriteNumber = GetRandomSpriteNumber();
@@ -185,6 +139,12 @@ namespace CrashOfGems.Game
                 case BonusType.Bomb:
                     sr.sprite = sprites[spriteNumber].bombSprite;
                     break;
+                case BonusType.Multiplication:
+                    sr.sprite = sprites[spriteNumber].multiplicationSprite;
+                    break;
+                case BonusType.Lightning:
+                    sr.sprite = sprites[spriteNumber].lightningSprite;
+                    break;
             }
 
             return block;
@@ -194,6 +154,13 @@ namespace CrashOfGems.Game
         {
             BonusComponent bonus = bonusBlock.AddComponent<BonusComponent>();
             bonus.type = bonusType;
+            bonusBlock.GetComponent<BlockComponent>().bonus = bonus;
+
+            if (bonusType == BonusType.Multiplication)
+                bonus.value = 2;
+
+            if (bonusType == BonusType.Lightning)
+                bonus.value = 3;
 
             return bonusBlock;
         }
@@ -270,12 +237,62 @@ namespace CrashOfGems.Game
         }
 
         /// <summary>
+        /// Получение пустых позиций на ИП.
+        /// </summary>
+        private List<KeyValuePair<int, int>> GetEmptyPositions()
+        {
+            List<KeyValuePair<int, int>> emptyPositions = new List<KeyValuePair<int, int>>();
+
+            for (int y = 0; y < width; y++)
+            {
+                for (int x = 0; x < height; x++)
+                {
+                    if (field[x, y] == null)
+                        emptyPositions.Add(new KeyValuePair<int, int>(x, y));
+                }
+            }
+
+            return emptyPositions;
+        }
+
+        /// <summary>
+        /// Функция для получения случайных для определенного бонуса.
+        /// </summary>
+        private List<KeyValuePair<int, int>> GetRandomBonusPositions(ref List<KeyValuePair<int, int>> emptyPositions, int bonusCount)
+        {
+            if (bonusCount == 0)
+                return null;
+
+            if (emptyPositions.Count < bonusCount)
+                bonusCount = emptyPositions.Count;
+
+            List<KeyValuePair<int, int>> bonusPositions = new List<KeyValuePair<int, int>>();
+            int count = 0, pos;
+            while (count < bonusCount)
+            {
+                pos = rnd.Next(0, emptyPositions.Count);
+                bonusPositions.Add(new KeyValuePair<int, int>(emptyPositions[pos].Key, emptyPositions[pos].Value));
+                emptyPositions.RemoveAt(pos);
+                count++;
+            }
+
+            return bonusPositions;
+        }
+
+        /// <summary>
         /// Достраивает на место удаленных элементов новые. 
         /// При этом определяет позиции этих элементов за пределами экрана для последующей анимации.
         /// </summary>
-        public void GenerateNewBlocks()
+        public void GenerateNewBlocks(int bombCount, int multiplicationCount, int lightningCount /*+ другие бонусы как появятся*/)
         {
             int sortNullX;
+            Vector2 pos;
+            List<KeyValuePair<int, int>> emptyPositions = GetEmptyPositions();
+            List<KeyValuePair<int, int>> bombPositions = GetRandomBonusPositions(ref emptyPositions, bombCount);
+            List<KeyValuePair<int, int>> multiplicationPositions = GetRandomBonusPositions(ref emptyPositions, multiplicationCount);
+            List<KeyValuePair<int, int>> lightningPositions = GetRandomBonusPositions(ref emptyPositions, lightningCount);
+            //... другие бонусы.
+
             for (int y = 0; y < width; y++)
             {
                 sortNullX = 0;
@@ -283,7 +300,17 @@ namespace CrashOfGems.Game
                 {
                     if (field[x, y] == null)
                     {
-                        field[x, y] = CreateNewFieldItem(x, y, new Vector2(y * spriteWidth, (spriteHeight * height) + sortNullX * spriteHeight), BonusType.None);
+                        pos = new Vector2(y * spriteWidth, (spriteHeight * height) + sortNullX * spriteHeight);
+
+                        // Проверка: нужно ли поставить бонус на это место.
+                        if (bombPositions != null && bombPositions.Contains(new KeyValuePair<int, int>(x, y)))
+                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.bombPrefab, BonusType.Bomb);
+                        else if (multiplicationPositions != null && multiplicationPositions.Contains(new KeyValuePair<int, int>(x, y)))
+                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.multiplicationPrefab, BonusType.Multiplication);
+                        else if (lightningPositions != null && lightningPositions.Contains(new KeyValuePair<int, int>(x, y)))
+                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.lightningPrefab, BonusType.Lightning);
+                        else
+                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.blockPrefab, BonusType.None);
                         sortNullX++;
                     }
                 }
