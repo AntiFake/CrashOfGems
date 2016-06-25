@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
-using Match3.Components;
+using CrashOfGems.Components;
 using System.Collections.Generic;
 using System.Linq;
-using Match3.Classes;
+using CrashOfGems.Classes;
+using CrashOfGems.Management;
+using CrashOfGems.Enums;
 
-namespace Match3.Main
+namespace CrashOfGems.Game
 {
     public class GameField
     {
@@ -66,16 +68,17 @@ namespace Match3.Main
             spriteWidth = sprites[0].blockSprite.bounds.size.x;
             spriteHeight = sprites[0].blockSprite.bounds.size.y;
 
-            if (isDebug)
-            {
-                this.width = prescribedMatrix.GetLength(0);
-                this.height = prescribedMatrix.GetLength(1);
-                GeneratePrescribedField();
-            }
-            else
+            //if (isDebug)
+            //{
+            //    this.width = prescribedMatrix.GetLength(0);
+            //    this.height = prescribedMatrix.GetLength(1);
+            //    GeneratePrescribedField();
+            //}
+            //else
                 GenerateField();
         }
 
+        /*
         #region Debug-генерация
         /// <summary>
         /// Генерация нерандомного поля для проверки.
@@ -113,12 +116,13 @@ namespace Match3.Main
             BlockComponent b = block.AddComponent<BlockComponent>();
             b.x = x;
             b.y = y;
-            b.typeId = spriteNum;
+            b.type = spriteNum;
             b.gameManager = gameManager;
 
             return block;
         }
         #endregion
+        */
 
         #region Генерация поля
 
@@ -147,8 +151,9 @@ namespace Match3.Main
 
             block.name = string.Format("{0};{1}", x, y);
             int spriteNumber = GetRandomSpriteNumber();
+            BlockType blockType = sprites[spriteNumber].blockType;
 
-            block = UpdateBlockComponent(block, x, y, spriteNumber);
+            block = UpdateBlockComponent(block, x, y, blockType);
             block = UpdateSpriteRendererComponent(block, x, y, spriteNumber, bonusType);
 
             if (bonusType != BonusType.None)
@@ -157,12 +162,12 @@ namespace Match3.Main
             return block;
         }
 
-        private GameObject UpdateBlockComponent(GameObject block, int x, int y, int spriteNumber)
+        private GameObject UpdateBlockComponent(GameObject block, int x, int y, BlockType blockType)
         {
             BlockComponent blockComponent = block.GetComponent<BlockComponent>();
             blockComponent.x = x;
             blockComponent.y = y;
-            blockComponent.typeId = spriteNumber;
+            blockComponent.type = blockType;
             blockComponent.gameManager = gameManager;
 
             return block;
@@ -378,23 +383,21 @@ namespace Match3.Main
             if (matchList.Count >= gameManager.matchCount)
                 return;
 
-            int typeId = bc.typeId;
-
             // Проверка "cнизу".
             if (bc.x - 1 >= 0 && field[bc.x - 1, bc.y] != null)
-                CommitBlockValidation(ref matchList, bc.x - 1, bc.y, bc.typeId);
+                CommitBlockValidation(ref matchList, bc.x - 1, bc.y, bc.type);
 
             // Проверка "слева".
             if (bc.y - 1 >= 0 && field[bc.x, bc.y - 1] != null)
-                CommitBlockValidation(ref matchList, bc.x, bc.y - 1, bc.typeId);
+                CommitBlockValidation(ref matchList, bc.x, bc.y - 1, bc.type);
 
             // Проверка "сверху".
             if (bc.x + 1 < height && field[bc.x + 1, bc.y] != null)
-                CommitBlockValidation(ref matchList, bc.x + 1, bc.y, bc.typeId);
+                CommitBlockValidation(ref matchList, bc.x + 1, bc.y, bc.type);
 
             // Проверка "справа".
             if (bc.y + 1 < width && field[bc.x, bc.y + 1] != null)
-                CommitBlockValidation(ref matchList, bc.x, bc.y + 1, bc.typeId);
+                CommitBlockValidation(ref matchList, bc.x, bc.y + 1, bc.type);
 
             return;
         }
@@ -402,10 +405,10 @@ namespace Match3.Main
         /// <summary>
         /// Запускает валидацию рекурсивно дальше.
         /// </summary>
-        private void CommitBlockValidation(ref List<string> matchList, int x, int y, int typeId)
+        private void CommitBlockValidation(ref List<string> matchList, int x, int y, BlockType blockType)
         {
             var bc = field[x, y].GetComponent<BlockComponent>();
-            if (bc != null && bc.typeId == typeId)
+            if (bc != null && bc.type == blockType)
             {
                 string blockName = string.Format("{0};{1}", x, y);
                 if (matchList.FirstOrDefault(i => i == blockName) == null)

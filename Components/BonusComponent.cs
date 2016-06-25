@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System;
+using CrashOfGems.Enums;
 
-namespace Match3.Components
+namespace CrashOfGems.Components
 {
-    public enum BonusType { None, Bomb, Light, Multiplication }
-
+    /// <summary>
+    /// Компонент-бонуса определенного типа.
+    /// Компонент назначается блоку на поле.
+    /// </summary>
     public class BonusComponent : MonoBehaviour
     {
         public BonusType type;

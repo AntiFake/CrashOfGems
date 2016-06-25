@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
+using CrashOfGems.Management;
+using CrashOfGems.Enums;
 
-namespace Match3.Components
+namespace CrashOfGems.Components
 {
     /// <summary>
     /// Компонент для каждого из блоков игрового поля.
@@ -11,7 +12,7 @@ namespace Match3.Components
     {
         public int x;
         public int y;
-        public int typeId;
+        public BlockType type;
         public GameManager gameManager;
         public BonusComponent bonus;
 

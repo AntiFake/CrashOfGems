@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
+using CrashOfGems.Enums;
 
-namespace Match3.Classes
+namespace CrashOfGems.Classes
 {
+    /// <summary>
+    /// Класс, использующийся для сопоставления бонусов.
+    /// </summary>
     [Serializable]
     public class BlockSprite
     {
@@ -12,5 +15,8 @@ namespace Match3.Classes
 
         [SerializeField]
         public Sprite bombSprite;
+
+        [SerializeField]
+        public BlockType blockType;
     }
 }
