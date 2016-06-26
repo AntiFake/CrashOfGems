@@ -10,24 +10,24 @@ namespace CrashOfGems.Game
     /// Статический класс, реализующий алгоритмы уничтожения блоков на поле и последовательность их вызова.
     /// </summary>
 	public static class BlockDestroyer
-	{
+    {
         /// <summary>
         /// Уничтожение игрового поля.
         /// </summary>
         /// <param name="field">Игровое поле.</param>
         /// <returns></returns>
 		public static GameField DestroyField(GameField field)
-		{
-			for (int x = 0; x < field.FieldHeight; x++)
-			{
-				for (int y = 0; y < field.FieldWidth; y++)
-				{
-					GameObject.Destroy(field.Field[x,y]);
-					field.Field[x, y] = null;
-				}
-			}
-			return field;
-		}
+        {
+            for (int x = 0; x < field.FieldHeight; x++)
+            {
+                for (int y = 0; y < field.FieldWidth; y++)
+                {
+                    GameObject.Destroy(field.Field[x, y]);
+                    field.Field[x, y] = null;
+                }
+            }
+            return field;
+        }
 
         public static List<BlockComponent> GetMatchedElements(GameField field, BlockComponent touchedBlock)
         {
@@ -53,11 +53,14 @@ namespace CrashOfGems.Game
                 bonus = bc.GetComponent<BonusComponent>();
                 if (bonus != null)
                 {
+                    // Бомба.
                     if (bonus.type == BonusType.Bomb)
                         ExplodeBomb(ref destroyList, field, bc);
+                    // Молния.
+                    if (bc.bonus != null && bc.bonus.type == BonusType.Lightning)
+                        UnleashLightning(ref destroyList, field, bc, bc.bonus);
                 }
             }
-
             matchedBlocks = destroyList;
         }
 
@@ -141,8 +144,7 @@ namespace CrashOfGems.Game
         }
 
         /// <summary>
-        /// Сохранение элементов в destroy-список.
-        /// Если элемент - бомба, то запускается "цепная реакция" в виде рекурсии.
+        /// Сохранение элементов в destroy-список и запуск ChainReaction.
         /// </summary>
         private static void CommitBombedBlock(ref List<BlockComponent> destroyList, GameField field, int x, int y)
         {
@@ -153,12 +155,117 @@ namespace CrashOfGems.Game
                 if (destroyList.FirstOrDefault(i => i.x == x && i.y == y) == null)
                 {
                     destroyList.Add(bc);
-                    // Если рядом также есть бомба --> цепная реакция.
-                    if (bc.bonus != null && bc.bonus.type == BonusType.Bomb)
-                        ExplodeBomb(ref destroyList, field, bc);
+
+                    if (bc.bonus != null)
+                        ChainDestruction(ref destroyList, field, bc);
                 }
             }
         }
+
+        /// <summary>
+        /// Алгоритм срабатывания молнии. Молния бьет во все четыре стороны на указанное число элементов.
+        /// </summary>
+        private static void UnleashLightning(ref List<BlockComponent> destroyList, GameField field, BlockComponent bc, BonusComponent lightning)
+        {
+            int counter = 0, x, y;
+            bool isNextNull = false;
+            x = bc.x;
+            y = bc.y;
+
+            // Cлева.
+            while (counter < lightning.value && !isNextNull)
+            {
+                if (y - 1 >= 0 && field.Field[x, y - 1] != null)
+                {
+                    CommitLightning(ref destroyList, field, x, y - 1);                  
+                    counter++;
+                    y--;
+                }
+                else
+                    isNextNull = true;
+            }
+
+            // Сверху.
+            counter = 0; isNextNull = false; x = bc.x; y = bc.y;
+            while (counter < lightning.value && !isNextNull)
+            {
+
+                if (x + 1 < field.FieldHeight && field.Field[x + 1, y] != null)
+                {
+                    CommitLightning(ref destroyList, field, x + 1, y);
+                    counter++;
+                    x++;
+                }
+                else
+                    isNextNull = true;
+            }
+
+            // Справа.
+            counter = 0; isNextNull = false; x = bc.x; y = bc.y;
+            while (counter < lightning.value && !isNextNull)
+            {
+
+                if (y + 1 < field.FieldWidth && field.Field[x, y + 1] != null)
+                {
+                    CommitLightning(ref destroyList, field, x, y + 1);
+                    counter++;
+                    y++;
+                }
+                else
+                    isNextNull = true;
+            }
+
+            // Вниз.
+            counter = 0; isNextNull = false; x = bc.x; y = bc.y;
+            while (counter < lightning.value && !isNextNull)
+            {
+
+                if (x - 1 >= 0 && field.Field[x - 1, y] != null)
+                {
+                    CommitLightning(ref destroyList, field, x - 1, y);
+                    counter++;
+                    x--;
+                }
+                else
+                    isNextNull = true;
+            }
+        }
+
+        /// <summary>
+        /// Сохранение элементов в destroy-список и запуск ChainReaction.
+        /// </summary>
+
+        private static void CommitLightning(ref List<BlockComponent> destroyList, GameField field, int x, int y)
+        {
+            BlockComponent bc = field.Field[x, y].GetComponent<BlockComponent>();
+
+            if (bc != null)
+            {
+                if (destroyList.FirstOrDefault(i => i.x == x && i.y == y) == null)
+                {
+                    destroyList.Add(bc);
+
+                    //Цепная реакция.
+                    if (bc.bonus != null)
+                        ChainDestruction(ref destroyList, field, bc);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Цепная реакция при уничтожении блоков с помощью бонуса.
+        /// </summary>
+        private static void ChainDestruction(ref List<BlockComponent> destroyList, GameField field, BlockComponent bc)
+        {
+            // Молния.
+            if (bc.bonus.type == BonusType.Lightning)
+                UnleashLightning(ref destroyList, field, bc, bc.bonus);
+            // Бомба.
+            if (bc.bonus.type == BonusType.Bomb)
+                ExplodeBomb(ref destroyList, field, bc);
+            // ... + бонус.
+        }
+
         #endregion
 
         #region Подсчет очков
