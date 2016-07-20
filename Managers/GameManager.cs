@@ -22,9 +22,6 @@ namespace CrashOfGems.Management
         [Header("Скорость анимации")]
         public float blockAnimationSpeed = 5f;
 
-        [Header("Спрайты плиток")]
-        public BlockSprite[] sprites;
-
         [Header("Игровая камера")]
         public Camera cam;
 
@@ -43,21 +40,6 @@ namespace CrashOfGems.Management
         [Header("Сдвиг порога")]
         public long thresholdDelta;
 
-        [Header("UI контроллер")]
-        public GameUIManager UIManager;
-
-        [Header("Префаб блока")]
-        public GameObject blockPrefab;
-
-        [Header("Префаб бомбы")]
-        public GameObject bombPrefab;
-
-        [Header("Префаб блока")]
-        public GameObject multiplicationPrefab;
-
-        [Header("Префаб бомбы")]
-        public GameObject lightningPrefab;
-
         [Header("Начальная цена за блок")]
         public int startBlockCost = 10;
 
@@ -66,6 +48,12 @@ namespace CrashOfGems.Management
 
         [Header("Доля от уровня за уничтожения всего поля")]
         public float fieldDestroyCoefficient = 0.25f;
+
+        [Header("UI контроллер")]
+        public GameUIManager UIManager;
+
+        [Header("Фабрика по созданию блоков")]
+        public BlockFactory blockFactory;
         #endregion
 
         private GameField gameField;
@@ -86,14 +74,14 @@ namespace CrashOfGems.Management
             audioSource = GetComponent<AudioSource>();
             audioSource.clip = soundClickEvent;
 
-            gameField = new GameField(this, fieldWidth, fieldHeight, sprites);
-            CameraAdjust.FitCamera(cam, gameField, sprites[0].blockSprite);
+            gameField = new GameField(this, fieldWidth, fieldHeight);
+            CameraAdjust.FitCamera(cam, gameField, blockFactory.sprites[0].blockSprite);
 
             // Перестроение поля.
             while (!gameField.ValidateField())
             {
                 gameField = BlockDestroyer.DestroyField(gameField);
-                gameField = new GameField(this, fieldWidth, fieldHeight, sprites);
+                gameField = new GameField(this, fieldWidth, fieldHeight);
             }
 
             currentLevel = 0;
@@ -184,11 +172,11 @@ namespace CrashOfGems.Management
             if (!gameField.ValidateField())
             {
                 // Ходов нет, а поле целое -> уничтожить поле.
-                if (gameField.IsFull)
+                if (gameField.IsFieldFull)
                     gameField = BlockDestroyer.DestroyField(gameField);
 
                 // Начисление очков за полностью уничтоженное поле.
-                if (gameField.IsEmpty)
+                if (gameField.IsFieldEmpty)
                 {
                     totalScore += (long)(fieldDestroyCoefficient * thresholdCurrent);
                     levelScore += (long)(fieldDestroyCoefficient * thresholdCurrent);

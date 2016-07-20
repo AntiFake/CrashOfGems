@@ -10,15 +10,21 @@ namespace CrashOfGems.Game
 {
     public class GameField
     {
-        private BlockSprite[] sprites;
-        private float spriteWidth;
-        private float spriteHeight;
-        private GameManager gameManager;
+        // Игровое поле.
         private GameObject[,] field;
         private int width;
         private int height;
+
+        // Спрайты.
+        private float spriteWidth;
+        private float spriteHeight;
+
+        // Анимации.
         private bool isRebuildRowsOn;
         private bool isRebuildColsOn;
+
+        // Управленцы.
+        private GameManager gameManager;
 
         // Переменные
         private System.Random rnd;
@@ -29,7 +35,7 @@ namespace CrashOfGems.Game
         public int FieldWidth { get { return width; } }
         public GameObject[,] Field { get { return field; } set { field = value; } }
         public int FieldHeight { get { return height; } }
-        public bool IsFull
+        public bool IsFieldFull
         {
             get
             {
@@ -46,7 +52,7 @@ namespace CrashOfGems.Game
                 return notNullCount == width * height;
             }
         }
-        public bool IsEmpty
+        public bool IsFieldEmpty
         {
             get
             {
@@ -65,17 +71,18 @@ namespace CrashOfGems.Game
         
         #endregion
 
-        public GameField(GameManager gm, int width, int height, BlockSprite[] sprites)
+        public GameField(GameManager gm, int width, int height)
         {
-            this.sprites = sprites;
             this.width = width;
             this.height = height;
             this.gameManager = gm;
 
+
+            spriteWidth = gameManager.blockFactory.sprites[0].blockSprite.bounds.size.x;
+            spriteHeight = gameManager.blockFactory.sprites[0].blockSprite.bounds.size.y;
+            field = gameManager.blockFactory.GenerateField(width, height, spriteWidth, spriteHeight);
+
             rnd = new System.Random();
-            spriteWidth = sprites[0].blockSprite.bounds.size.x;
-            spriteHeight = sprites[0].blockSprite.bounds.size.y;
-            GenerateField();
         }
 
         #region Генерация поля
@@ -91,87 +98,9 @@ namespace CrashOfGems.Game
             {
                 for (int y = 0; y < width; y++)
                 {
-                    field[x, y] = CreateNewFieldItem(x, y, new Vector2(y * spriteWidth, x * spriteHeight), gameManager.blockPrefab, BonusType.None);
+                    field[x, y] = gameManager.blockFactory.CreateBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight));
                 }
             }
-        }
-
-        /// <summary>
-        /// Создание нового block-а.
-        /// </summary>
-        private GameObject CreateNewFieldItem(int x, int y, Vector2 pos, GameObject prefab, BonusType bonusType)
-        {
-            var block = (GameObject)GameObject.Instantiate(prefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
-
-            block.name = string.Format("{0};{1}", x, y);
-            int spriteNumber = GetRandomSpriteNumber();
-            BlockType blockType = sprites[spriteNumber].blockType;
-
-            block = UpdateBlockComponent(block, x, y, blockType);
-            block = UpdateSpriteRendererComponent(block, x, y, spriteNumber, bonusType);
-
-            if (bonusType != BonusType.None)
-                AddBonusComponent(block, bonusType);
-
-            return block;
-        }
-
-        private GameObject UpdateBlockComponent(GameObject block, int x, int y, BlockType blockType)
-        {
-            BlockComponent blockComponent = block.GetComponent<BlockComponent>();
-            blockComponent.x = x;
-            blockComponent.y = y;
-            blockComponent.type = blockType;
-            blockComponent.gameManager = gameManager;
-
-            return block;
-        }
-
-        private GameObject UpdateSpriteRendererComponent(GameObject block, int x, int y, int spriteNumber, BonusType bonusType)
-        {
-            SpriteRenderer sr = block.GetComponent<SpriteRenderer>();
-
-            switch (bonusType)
-            {
-                case BonusType.None:
-                    sr.sprite = sprites[spriteNumber].blockSprite;
-                    break;
-                case BonusType.Bomb:
-                    sr.sprite = sprites[spriteNumber].bombSprite;
-                    break;
-                case BonusType.Multiplication:
-                    sr.sprite = sprites[spriteNumber].multiplicationSprite;
-                    break;
-                case BonusType.Lightning:
-                    sr.sprite = sprites[spriteNumber].lightningSprite;
-                    break;
-            }
-
-            return block;
-        }
-
-        private GameObject AddBonusComponent(GameObject bonusBlock, BonusType bonusType)
-        {
-            BonusComponent bonus = bonusBlock.AddComponent<BonusComponent>();
-            bonus.type = bonusType;
-            bonusBlock.GetComponent<BlockComponent>().bonus = bonus;
-
-            if (bonusType == BonusType.Multiplication)
-                bonus.value = 2;
-
-            if (bonusType == BonusType.Lightning)
-                bonus.value = 3;
-
-            return bonusBlock;
-        }
-
-        /// <summary>
-        /// Получение случайного спрайта из коллекции.
-        /// </summary>
-        /// <returns></returns>
-        private int GetRandomSpriteNumber()
-        {
-            return rnd.Next(0, sprites.Length);
         }
         #endregion
 
@@ -304,13 +233,13 @@ namespace CrashOfGems.Game
 
                         // Проверка: нужно ли поставить бонус на это место.
                         if (bombPositions != null && bombPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.bombPrefab, BonusType.Bomb);
+                            field[x, y] = gameManager.blockFactory.CreateBomb(x, y, pos);
                         else if (multiplicationPositions != null && multiplicationPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.multiplicationPrefab, BonusType.Multiplication);
+                            field[x, y] = gameManager.blockFactory.CreateMultiplier(x, y, pos);
                         else if (lightningPositions != null && lightningPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.lightningPrefab, BonusType.Lightning);
+                            field[x, y] = gameManager.blockFactory.CreateLightning(x, y, pos);
                         else
-                            field[x, y] = CreateNewFieldItem(x, y, pos, gameManager.blockPrefab, BonusType.None);
+                            field[x, y] = gameManager.blockFactory.CreateBlock(x, y, pos);
                         sortNullX++;
                     }
                 }
