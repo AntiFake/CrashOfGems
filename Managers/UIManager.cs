@@ -7,10 +7,8 @@ using System.Collections.Generic;
 
 namespace CrashOfGems.Management
 {
-    public class GameUIManager : MonoBehaviour
+    public class UIManager : MonoBehaviour
     {
-        public GameManager gameManager;
-
         #region Экран "Игра"
         public Button btnPause;
         public Text timer;
@@ -42,6 +40,17 @@ namespace CrashOfGems.Management
         public Text finalLevel;
 
         #endregion
+
+        private static UIManager _instance;
+        public static UIManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = (UIManager)FindObjectOfType(typeof(UIManager));
+                return _instance;
+            }
+        }
 
         private void Awake()
         {
@@ -159,7 +168,7 @@ namespace CrashOfGems.Management
         public void OnPauseButtonClick()
         {
             pauseScreen.SetActive(true);
-            gameManager.PauseEnabledCallback();
+            GameManager.Instance.PauseEnabledCallback();
         }
         #endregion
 
@@ -168,7 +177,7 @@ namespace CrashOfGems.Management
         public void OnResumeButtonClick()
         {
             pauseScreen.SetActive(false);
-            gameManager.PauseDisabledCallback();
+            GameManager.Instance.PauseDisabledCallback();
         }
 
         public void OnRestartButtonClick()

@@ -1,9 +1,7 @@
 ﻿using UnityEngine;
-using System.Collections;
 using CrashOfGems.Enums;
 using CrashOfGems.Classes;
 using CrashOfGems.Components;
-using CrashOfGems.Management;
 
 public class BlockFactory : MonoBehaviour
 {
@@ -12,9 +10,20 @@ public class BlockFactory : MonoBehaviour
     public GameObject prefabMultiplier;
     public GameObject prefabBlock;
     public BlockSprite[] sprites;
-    public GameManager gameManager;
 
     private System.Random rnd;
+    private static BlockFactory _instance;
+
+    public static BlockFactory Instance
+    {
+        get
+        {
+            if (_instance == null)
+                _instance = (BlockFactory)FindObjectOfType(typeof(BlockFactory));
+            return _instance;
+        }
+    }
+
 
     private void Awake()
     {
@@ -26,32 +35,38 @@ public class BlockFactory : MonoBehaviour
     /// </summary>
     public GameObject CreateBlock(int x, int y, Vector2 pos)
     {
-        return CreateNewFieldItem(prefabBlock, pos, x, y, BonusType.None);
+        var block = CreateNewFieldItem(prefabBlock, pos, x, y, BonusType.None);
+        return block;
     }
-
 
     /// <summary>
     /// Создание молнии.
     /// </summary>
-    public GameObject CreateLightning(int x, int y, Vector2 pos)
+    public GameObject CreateLightning(int x, int y, Vector2 pos, int hitLength)
     {
-        return CreateNewFieldItem(prefabLightning, pos, x, y, BonusType.Lightning);
+        var lightning = CreateNewFieldItem(prefabLightning, pos, x, y, BonusType.Lightning);
+        SetLightningComponent(lightning, hitLength);
+        return lightning;
     }
 
     /// <summary>
     /// Создание множителя.
     /// </summary>
-    public GameObject CreateMultiplier(int x, int y, Vector2 pos)
+    public GameObject CreateMultiplier(int x, int y, Vector2 pos, int multiplierValue)
     {
-        return CreateNewFieldItem(prefabMultiplier, pos, x, y, BonusType.Multiplication);
+        var multiplier = CreateNewFieldItem(prefabMultiplier, pos, x, y, BonusType.Multiplication);
+        SetMultiplierComponent(multiplier, multiplierValue);
+        return multiplier;
     }
 
     /// <summary>
     /// Создание бомбы.
     /// </summary>
-    public GameObject CreateBomb(int x, int y, Vector2 pos)
+    public GameObject CreateBomb(int x, int y, Vector2 pos, int explosionRadius)
     {
-        return CreateNewFieldItem(prefabBomb, pos, x, y, BonusType.Bomb);
+        var bomb = CreateNewFieldItem(prefabBomb, pos, x, y, BonusType.Bomb);
+        SetBombComponent(bomb, explosionRadius);
+        return bomb;
     }
 
     /// <summary>
@@ -75,32 +90,26 @@ public class BlockFactory : MonoBehaviour
     #region Служебные функции
     private GameObject CreateNewFieldItem(GameObject prefab, Vector2 pos, int x, int y, BonusType bonusType)
     {
+        int spriteNumber = GetRandomSpriteNumber();
+
         var block = (GameObject)GameObject.Instantiate(prefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
         block.name = string.Format("{0};{1}", x, y);
-        int spriteNumber = GetRandomSpriteNumber();
-        BlockType blockType = sprites[spriteNumber].blockType;
 
-        block = UpdateBlockComponent(block, x, y, blockType);
-        block = UpdateSpriteRendererComponent(block, x, y, spriteNumber, bonusType);
-
-        if (bonusType != BonusType.None)
-            AddBonusComponent(block, bonusType);
+        SetBlockComponent(block, x, y, sprites[spriteNumber].blockType);
+        SetSpriteRendererComponent(block, spriteNumber, bonusType);
 
         return block;
     }
 
-    private GameObject UpdateBlockComponent(GameObject block, int x, int y, BlockType blockType)
+    private void SetBlockComponent(GameObject block, int x, int y, BlockType blockType)
     {
         BlockComponent blockComponent = block.GetComponent<BlockComponent>();
         blockComponent.x = x;
         blockComponent.y = y;
         blockComponent.type = blockType;
-        blockComponent.gameManager = gameManager;
-
-        return block;
     }
 
-    private GameObject UpdateSpriteRendererComponent(GameObject block, int x, int y, int spriteNumber, BonusType bonusType)
+    private void SetSpriteRendererComponent(GameObject block, int spriteNumber, BonusType bonusType)
     {
         SpriteRenderer sr = block.GetComponent<SpriteRenderer>();
 
@@ -119,23 +128,24 @@ public class BlockFactory : MonoBehaviour
                 sr.sprite = sprites[spriteNumber].lightningSprite;
                 break;
         }
-
-        return block;
     }
 
-    private GameObject AddBonusComponent(GameObject bonusBlock, BonusType bonusType)
+    private void SetBombComponent(GameObject block, int radius)
     {
-        BonusComponent bonus = bonusBlock.AddComponent<BonusComponent>();
-        bonus.type = bonusType;
-        bonusBlock.GetComponent<BlockComponent>().bonus = bonus;
+        var bombComponent = block.GetComponent<BombComponent>();
+        bombComponent.explosionRadius = radius;
+    }
 
-        if (bonusType == BonusType.Multiplication)
-            bonus.value = 2;
+    private void SetLightningComponent(GameObject block, int hitLength)
+    {
+        var lightningComponent = block.GetComponent<LightningComponent>();
+        lightningComponent.hitLength = hitLength;
+    }
 
-        if (bonusType == BonusType.Lightning)
-            bonus.value = 3;
-
-        return bonusBlock;
+    private void SetMultiplierComponent(GameObject block, int value)
+    {
+        var multiplierComponent = block.GetComponent<MultiplierComponent>();
+        multiplierComponent.multiplierValue = value;
     }
 
     private int GetRandomSpriteNumber()

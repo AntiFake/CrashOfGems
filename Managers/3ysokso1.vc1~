@@ -49,6 +49,11 @@ namespace CrashOfGems.Management
         [Header("Доля от уровня за уничтожения всего поля")]
         public float fieldDestroyCoefficient = 0.25f;
 
+        [Header("UI контроллер")]
+        public GameUIManager UIManager;
+
+        [Header("Фабрика по созданию блоков")]
+        public BlockFactory blockFactory;
         #endregion
 
         private GameField gameField;
@@ -64,30 +69,19 @@ namespace CrashOfGems.Management
         private bool isPause;
         private bool isGameOver;
 
-        private static GameManager instance;
-        public static GameManager Instance
-        {
-            get
-            {
-                if (instance == null)
-                    instance = (GameManager)FindObjectOfType(typeof(GameManager));
-                return instance;
-            }
-        }
-
         private void Awake()
         {
             audioSource = GetComponent<AudioSource>();
             audioSource.clip = soundClickEvent;
 
-            gameField = new GameField(fieldWidth, fieldHeight);
-            CameraAdjust.FitCamera(cam, gameField, BlockFactory.Instance.sprites[0].blockSprite);
+            gameField = new GameField(this, fieldWidth, fieldHeight);
+            CameraAdjust.FitCamera(cam, gameField, blockFactory.sprites[0].blockSprite);
 
             // Перестроение поля.
             while (!gameField.ValidateField())
             {
                 gameField = BlockDestroyer.DestroyField(gameField);
-                gameField = new GameField(fieldWidth, fieldHeight);
+                gameField = new GameField(this, fieldWidth, fieldHeight);
             }
 
             currentLevel = 0;
@@ -102,10 +96,10 @@ namespace CrashOfGems.Management
             thresholdCurrent = thresholdNext;
             currentLevel++;
 
-            UIManager.Instance.SetLevel(currentLevel);
-            UIManager.Instance.SetLevelScore(levelScore);
-            UIManager.Instance.SetThresholdValue(thresholdCurrent);
-            UIManager.Instance.SetTimer(timer);
+            UIManager.SetLevel(currentLevel);
+            UIManager.SetLevelScore(levelScore);
+            UIManager.SetThresholdValue(thresholdCurrent);
+            UIManager.SetTimer(timer);
         }
 
         // Таймеры.
@@ -122,7 +116,7 @@ namespace CrashOfGems.Management
                 else if (timer <= 0 && levelScore < thresholdCurrent)
                 {
                     gameField.DisableBlockTouch();
-                    UIManager.Instance.ShowDefeatScreen(totalScore, currentLevel);
+                    UIManager.ShowDefeatScreen(totalScore, currentLevel);
                     isGameOver = true;
                 }
                 else
@@ -132,7 +126,7 @@ namespace CrashOfGems.Management
                     {
                         // Обратный отсчет таймера.
                         timer -= Time.deltaTime;
-                        UIManager.Instance.SetTimer(timer);
+                        UIManager.SetTimer(timer);
                     }
                 }
             }
@@ -186,17 +180,17 @@ namespace CrashOfGems.Management
                 {
                     totalScore += (long)(fieldDestroyCoefficient * thresholdCurrent);
                     levelScore += (long)(fieldDestroyCoefficient * thresholdCurrent);
-                    UIManager.Instance.SetLevelScore(levelScore);
+                    UIManager.SetLevelScore(levelScore);
                 }
 
                 // Обновить ИП.
                 gameField.GenerateNewBlocks(
-                    UIManager.Instance.redVessel.BonusCount,
-                    UIManager.Instance.yellowVessel.BonusCount,
-                    UIManager.Instance.blueVessel.BonusCount
+                    UIManager.redVessel.BonusCount,
+                    UIManager.yellowVessel.BonusCount,
+                    UIManager.blueVessel.BonusCount
                 );
 
-                UIManager.Instance.EmptyVessels();
+                UIManager.EmptyVessels();
 
                 // Запустить анимацию.
                 startAnimationTime = Time.time;
@@ -224,13 +218,13 @@ namespace CrashOfGems.Management
                 // Некоторые блоки были уничтожены.
                 if (points.Any())
                 {
-                    UIManager.Instance.UpdateVessels(points);
+                    UIManager.UpdateVessels(points);
 
                     long pts = GetTotalPoints(points) * multiplier;
                     levelScore += pts;
                     totalScore += pts;
 
-                    UIManager.Instance.SetLevelScore(levelScore);
+                    UIManager.SetLevelScore(levelScore);
                     
                     // Обрушить строки.
                     gameField.UpdateRows();

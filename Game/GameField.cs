@@ -23,9 +23,6 @@ namespace CrashOfGems.Game
         private bool isRebuildRowsOn;
         private bool isRebuildColsOn;
 
-        // Управленцы.
-        private GameManager gameManager;
-
         // Переменные
         private System.Random rnd;
 
@@ -71,16 +68,15 @@ namespace CrashOfGems.Game
         
         #endregion
 
-        public GameField(GameManager gm, int width, int height)
+        public GameField(int width, int height)
         {
             this.width = width;
             this.height = height;
-            this.gameManager = gm;
 
 
-            spriteWidth = gameManager.blockFactory.sprites[0].blockSprite.bounds.size.x;
-            spriteHeight = gameManager.blockFactory.sprites[0].blockSprite.bounds.size.y;
-            field = gameManager.blockFactory.GenerateField(width, height, spriteWidth, spriteHeight);
+            spriteWidth = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.x;
+            spriteHeight = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.y;
+            field = BlockFactory.Instance.GenerateField(width, height, spriteWidth, spriteHeight);
 
             rnd = new System.Random();
         }
@@ -98,7 +94,7 @@ namespace CrashOfGems.Game
             {
                 for (int y = 0; y < width; y++)
                 {
-                    field[x, y] = gameManager.blockFactory.CreateBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight));
+                    field[x, y] = BlockFactory.Instance.CreateBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight));
                 }
             }
         }
@@ -233,13 +229,13 @@ namespace CrashOfGems.Game
 
                         // Проверка: нужно ли поставить бонус на это место.
                         if (bombPositions != null && bombPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = gameManager.blockFactory.CreateBomb(x, y, pos);
+                            field[x, y] = BlockFactory.Instance.CreateBomb(x, y, pos, 2);
                         else if (multiplicationPositions != null && multiplicationPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = gameManager.blockFactory.CreateMultiplier(x, y, pos);
+                            field[x, y] = BlockFactory.Instance.CreateMultiplier(x, y, pos, 2);
                         else if (lightningPositions != null && lightningPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = gameManager.blockFactory.CreateLightning(x, y, pos);
+                            field[x, y] = BlockFactory.Instance.CreateLightning(x, y, pos, 4);
                         else
-                            field[x, y] = gameManager.blockFactory.CreateBlock(x, y, pos);
+                            field[x, y] = BlockFactory.Instance.CreateBlock(x, y, pos);
                         sortNullX++;
                     }
                 }
@@ -322,7 +318,7 @@ namespace CrashOfGems.Game
                     if (field[x, y] != null)
                     {
                         ValidateBlock(ref matchList, field[x, y].GetComponent<BlockComponent>());
-                        if (matchList.Count >= gameManager.matchCount)
+                        if (matchList.Count >= GameManager.Instance.matchCount)
                             return true;
                     }
                 }
@@ -336,7 +332,7 @@ namespace CrashOfGems.Game
         /// </summary>
         private void ValidateBlock(ref List<string> matchList, BlockComponent bc)
         {
-            if (matchList.Count >= gameManager.matchCount)
+            if (matchList.Count >= GameManager.Instance.matchCount)
                 return;
 
             // Проверка "cнизу".
