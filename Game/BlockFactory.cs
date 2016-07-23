@@ -24,7 +24,6 @@ public class BlockFactory : MonoBehaviour
         }
     }
 
-
     private void Awake()
     {
         rnd = new System.Random();

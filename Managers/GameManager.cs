@@ -258,7 +258,7 @@ namespace CrashOfGems.Management
                 audioSource.Play();
                 destroyList.ForEach(i =>
                 {
-                    GameObject.Destroy(i.gameObject);
+                    i.Destroy();
                     gameField.Field[i.x, i.y] = null;
                 });
             }

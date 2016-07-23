@@ -22,7 +22,22 @@ namespace CrashOfGems.Components
 
         public void Destroy()
         {
-
+            switch (bonusType)
+            {
+                case BonusType.None:
+                    //Debug.Log("Block destroy animation...");
+                    break;
+                case BonusType.Bomb:
+                    gameObject.GetComponent<BombComponent>().Destroy();
+                    break;
+                case BonusType.Lightning:
+                    gameObject.GetComponent<LightningComponent>().Destroy();
+                    break;
+                case BonusType.Multiplication:
+                    gameObject.GetComponent<MultiplierComponent>().Destroy();
+                    break;
+            }
+            Destroy(gameObject);
         }
     }
 }

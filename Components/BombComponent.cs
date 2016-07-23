@@ -14,7 +14,7 @@ namespace CrashOfGems.Components
 
         public void Destroy()
         {
-
+            //Debug.Log("Bomb destroy animation...");
         }
     }
 }
