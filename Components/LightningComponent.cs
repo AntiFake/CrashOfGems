@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace CrashOfGems.Components
 {
@@ -7,14 +6,20 @@ namespace CrashOfGems.Components
     {
         public int hitLength = 4;
 
+        private Animator _animator;
         private void Awake()
         {
-
+            _animator = GetComponent<Animator>();
         }
 
-        public void Destroy()
+        public void StartDestroy()
         {
-            //Debug.Log("Lightning destroy animation...");
+            EndDestroy();
+        }
+
+        public void EndDestroy()
+        {
+            Destroy(gameObject);
         }
     }
 }

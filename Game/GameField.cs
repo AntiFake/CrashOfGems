@@ -11,53 +11,53 @@ namespace CrashOfGems.Game
     public class GameField
     {
         // Игровое поле.
-        private GameObject[,] field;
-        private int width;
-        private int height;
+        private GameObject[,] _field;
+        private int _width;
+        private int _height;
 
         // Спрайты.
-        private float spriteWidth;
-        private float spriteHeight;
+        private float _spriteWidth;
+        private float _spriteHeight;
 
         // Анимации.
-        private bool isRebuildRowsOn;
-        private bool isRebuildColsOn;
+        private bool _isRebuildRowsOn;
+        private bool _isRebuildColsOn;
 
         // Переменные
-        private System.Random rnd;
+        private System.Random _rnd;
 
         #region Свойства
-        public bool IsRebuildRowsOn { get { return isRebuildRowsOn; } set { isRebuildRowsOn = value; } }
-        public bool IsRebuildColsOn { get { return isRebuildColsOn; } set { isRebuildColsOn = value; } }
-        public int FieldWidth { get { return width; } }
-        public GameObject[,] Field { get { return field; } set { field = value; } }
-        public int FieldHeight { get { return height; } }
+        public bool IsRebuildRowsOn { get { return _isRebuildRowsOn; } set { _isRebuildRowsOn = value; } }
+        public bool IsRebuildColsOn { get { return _isRebuildColsOn; } set { _isRebuildColsOn = value; } }
+        public int FieldWidth { get { return _width; } }
+        public GameObject[,] Field { get { return _field; } set { _field = value; } }
+        public int FieldHeight { get { return _height; } }
         public bool IsFieldFull
         {
             get
             {
                 int notNullCount = 0;
-                for (int x = 0; x < height; x++)
+                for (int x = 0; x < _height; x++)
                 {
-                    for (int y = 0; y < width; y++)
+                    for (int y = 0; y < _width; y++)
                     {
-                        if (field[x, y] != null)
+                        if (_field[x, y] != null)
                             notNullCount++;
                     }
                 }
 
-                return notNullCount == width * height;
+                return notNullCount == _width * _height;
             }
         }
         public bool IsFieldEmpty
         {
             get
             {
-                for (int x = 0; x < height; x++)
+                for (int x = 0; x < _height; x++)
                 {
-                    for (int y = 0; y < width; y++)
+                    for (int y = 0; y < _width; y++)
                     {
-                        if (field[x, y] != null)
+                        if (_field[x, y] != null)
                             return false;
                     }
                 }
@@ -65,40 +65,20 @@ namespace CrashOfGems.Game
                 return true;
             }
         }
-        
         #endregion
 
         public GameField(int width, int height)
         {
-            this.width = width;
-            this.height = height;
+            this._width = width;
+            this._height = height;
 
 
-            spriteWidth = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.x;
-            spriteHeight = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.y;
-            field = BlockFactory.Instance.GenerateField(width, height, spriteWidth, spriteHeight);
+            _spriteWidth = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.x;
+            _spriteHeight = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.y;
+            _field = BlockFactory.Instance.GenerateField(width, height, _spriteWidth, _spriteHeight);
 
-            rnd = new System.Random();
+            _rnd = new System.Random();
         }
-
-        #region Генерация поля
-
-        /// <summary>
-        /// Генерация игрового поля.
-        /// </summary>
-        private void GenerateField()
-        {
-            field = new GameObject[height, width];
-
-            for (int x = 0; x < height; x++)
-            {
-                for (int y = 0; y < width; y++)
-                {
-                    field[x, y] = BlockFactory.Instance.CreateBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight));
-                }
-            }
-        }
-        #endregion
 
         #region Перестроение
         /// <summary>
@@ -107,19 +87,19 @@ namespace CrashOfGems.Game
         public void UpdateRows()
         {
             // Новая позиция по x.
-            GameObject[,] gf = new GameObject[height, width];
+            GameObject[,] gf = new GameObject[_height, _width];
             int newX;
             BlockComponent bc;
 
-            for (int y = 0; y < width; y++)
+            for (int y = 0; y < _width; y++)
             {
                 newX = 0;
-                for (int x = 0; x < height; x++)
+                for (int x = 0; x < _height; x++)
                 {
                     // Если блок не удален.
-                    if (field[x, y] != null)
+                    if (_field[x, y] != null)
                     {
-                        gf[newX, y] = field[x, y];
+                        gf[newX, y] = _field[x, y];
                         bc = gf[newX, y].GetComponent<BlockComponent>();
                         bc.x = newX;
                         gf[newX, y].name = string.Format("{0};{1}", newX, y);
@@ -127,7 +107,7 @@ namespace CrashOfGems.Game
                     }
                 }
             }
-            field = gf;
+            _field = gf;
         }
 
         /// <summary>
@@ -135,18 +115,18 @@ namespace CrashOfGems.Game
         /// </summary>
         public void UpdateCols()
         {
-            GameObject[,] gf = new GameObject[height, width];
+            GameObject[,] gf = new GameObject[_height, _width];
             BlockComponent bc;
             int newY = 0;
 
-            for (int y = 0; y < width; y++)
+            for (int y = 0; y < _width; y++)
             {
-                if (field[0, y] != null)
+                if (_field[0, y] != null)
                 {
-                    for (int x = 0; x < height; x++)
+                    for (int x = 0; x < _height; x++)
                     {
-                        gf[x, newY] = field[x, y];
-                        if (field[x, y] != null)
+                        gf[x, newY] = _field[x, y];
+                        if (_field[x, y] != null)
                         {
                             bc = gf[x, newY].GetComponent<BlockComponent>();
                             bc.y = newY;
@@ -157,8 +137,8 @@ namespace CrashOfGems.Game
                 }
             }
             
-            field = gf;
-            isRebuildColsOn = true;
+            _field = gf;
+            _isRebuildColsOn = true;
         }
 
         /// <summary>
@@ -168,11 +148,11 @@ namespace CrashOfGems.Game
         {
             List<KeyValuePair<int, int>> emptyPositions = new List<KeyValuePair<int, int>>();
 
-            for (int y = 0; y < width; y++)
+            for (int y = 0; y < _width; y++)
             {
-                for (int x = 0; x < height; x++)
+                for (int x = 0; x < _height; x++)
                 {
-                    if (field[x, y] == null)
+                    if (_field[x, y] == null)
                         emptyPositions.Add(new KeyValuePair<int, int>(x, y));
                 }
             }
@@ -195,7 +175,7 @@ namespace CrashOfGems.Game
             int count = 0, pos;
             while (count < bonusCount)
             {
-                pos = rnd.Next(0, emptyPositions.Count);
+                pos = _rnd.Next(0, emptyPositions.Count);
                 bonusPositions.Add(new KeyValuePair<int, int>(emptyPositions[pos].Key, emptyPositions[pos].Value));
                 emptyPositions.RemoveAt(pos);
                 count++;
@@ -218,24 +198,24 @@ namespace CrashOfGems.Game
             List<KeyValuePair<int, int>> lightningPositions = GetRandomBonusPositions(ref emptyPositions, lightningCount);
             //... другие бонусы.
 
-            for (int y = 0; y < width; y++)
+            for (int y = 0; y < _width; y++)
             {
                 sortNullX = 0;
-                for (int x = 0; x < height; x++)
+                for (int x = 0; x < _height; x++)
                 {
-                    if (field[x, y] == null)
+                    if (_field[x, y] == null)
                     {
-                        pos = new Vector2(y * spriteWidth, (spriteHeight * height) + sortNullX * spriteHeight);
+                        pos = new Vector2(y * _spriteWidth, (_spriteHeight * _height) + sortNullX * _spriteHeight);
 
                         // Проверка: нужно ли поставить бонус на это место.
                         if (bombPositions != null && bombPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = BlockFactory.Instance.CreateBomb(x, y, pos, 2);
+                            _field[x, y] = BlockFactory.Instance.CreateBomb(x, y, pos, 2);
                         else if (multiplicationPositions != null && multiplicationPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = BlockFactory.Instance.CreateMultiplier(x, y, pos, 2);
+                            _field[x, y] = BlockFactory.Instance.CreateMultiplier(x, y, pos, 2);
                         else if (lightningPositions != null && lightningPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            field[x, y] = BlockFactory.Instance.CreateLightning(x, y, pos, 4);
+                            _field[x, y] = BlockFactory.Instance.CreateLightning(x, y, pos, 4);
                         else
-                            field[x, y] = BlockFactory.Instance.CreateBlock(x, y, pos);
+                            _field[x, y] = BlockFactory.Instance.CreateBlock(x, y, pos);
                         sortNullX++;
                     }
                 }
@@ -247,9 +227,6 @@ namespace CrashOfGems.Game
         /// <summary>
         /// Анимация обсыпания строк.
         /// </summary>
-        /// <param name="speed">Скорость анимации.</param>
-        /// <param name="startAnimationTime">Время начала анимации.</param>
-        /// <returns></returns>
         public bool RebuildRows(float speed, float startAnimationTime)
         {
             return RebuildField(speed, startAnimationTime);
@@ -258,9 +235,6 @@ namespace CrashOfGems.Game
         /// <summary>
         /// Анимация сдвига колонок.
         /// </summary>
-        /// <param name="speed">Скорость анимации.</param>
-        /// <param name="startAnimationTime">Время начала анимации.</param>
-        /// <returns></returns>
         public bool RebuildCols(float speed, float startAnimationTime)
         {
             return RebuildField(speed, startAnimationTime);
@@ -269,9 +243,6 @@ namespace CrashOfGems.Game
         /// <summary>
         /// Анимация перестроения поля (сдвигает блоки на их позиции).
         /// </summary>
-        /// <param name="speed">Скорость анимации.</param>
-        /// <param name="startAnimationTime">Время начала анимации.</param>
-        /// <returns></returns>
         private bool RebuildField(float speed, float startAnimationTime)
         {
             Vector2 newPos, currentPos;
@@ -279,19 +250,19 @@ namespace CrashOfGems.Game
             bool isFinished = true;
 
 
-            for (int y = 0; y < width; y++)
+            for (int y = 0; y < _width; y++)
             {
-                for (int x = 0; x < height; x++)
+                for (int x = 0; x < _height; x++)
                 {
-                    if (field[x, y] != null)
+                    if (_field[x, y] != null)
                     {
-                        newPos = new Vector2(y * spriteWidth, x * spriteHeight);
-                        currentPos = new Vector2(field[x, y].transform.position.x, field[x, y].transform.position.y);
+                        newPos = new Vector2(y * _spriteWidth, x * _spriteHeight);
+                        currentPos = new Vector2(_field[x, y].transform.position.x, _field[x, y].transform.position.y);
 
                         if (newPos != currentPos)
                         {
                             step = (Time.time - startAnimationTime) * speed / (Vector2.Distance(newPos, currentPos));
-                            field[x, y].transform.position = Vector3.Lerp(field[x, y].transform.position, new Vector3(y * spriteWidth, x * spriteHeight, 0f), step);
+                            _field[x, y].transform.position = Vector3.Lerp(_field[x, y].transform.position, new Vector3(y * _spriteWidth, x * _spriteHeight, 0f), step);
                             isFinished = false;
                         }
                     }
@@ -310,14 +281,14 @@ namespace CrashOfGems.Game
         {
             List<string> matchList = new List<string>();
 
-            for (int x = 0; x < height; x++)
+            for (int x = 0; x < _height; x++)
             {
-                for (int y = 0; y < width; y++)
+                for (int y = 0; y < _width; y++)
                 {
                     matchList.Clear();
-                    if (field[x, y] != null)
+                    if (_field[x, y] != null)
                     {
-                        ValidateBlock(ref matchList, field[x, y].GetComponent<BlockComponent>());
+                        ValidateBlock(ref matchList, _field[x, y].GetComponent<BlockComponent>());
                         if (matchList.Count >= GameManager.Instance.matchCount)
                             return true;
                     }
@@ -336,19 +307,19 @@ namespace CrashOfGems.Game
                 return;
 
             // Проверка "cнизу".
-            if (bc.x - 1 >= 0 && field[bc.x - 1, bc.y] != null)
+            if (bc.x - 1 >= 0 && _field[bc.x - 1, bc.y] != null)
                 CommitBlockValidation(ref matchList, bc.x - 1, bc.y, bc.type);
 
             // Проверка "слева".
-            if (bc.y - 1 >= 0 && field[bc.x, bc.y - 1] != null)
+            if (bc.y - 1 >= 0 && _field[bc.x, bc.y - 1] != null)
                 CommitBlockValidation(ref matchList, bc.x, bc.y - 1, bc.type);
 
             // Проверка "сверху".
-            if (bc.x + 1 < height && field[bc.x + 1, bc.y] != null)
+            if (bc.x + 1 < _height && _field[bc.x + 1, bc.y] != null)
                 CommitBlockValidation(ref matchList, bc.x + 1, bc.y, bc.type);
 
             // Проверка "справа".
-            if (bc.y + 1 < width && field[bc.x, bc.y + 1] != null)
+            if (bc.y + 1 < _width && _field[bc.x, bc.y + 1] != null)
                 CommitBlockValidation(ref matchList, bc.x, bc.y + 1, bc.type);
 
             return;
@@ -359,7 +330,7 @@ namespace CrashOfGems.Game
         /// </summary>
         private void CommitBlockValidation(ref List<string> matchList, int x, int y, BlockType blockType)
         {
-            var bc = field[x, y].GetComponent<BlockComponent>();
+            var bc = _field[x, y].GetComponent<BlockComponent>();
             if (bc != null && bc.type == blockType)
             {
                 string blockName = string.Format("{0};{1}", x, y);
@@ -373,7 +344,6 @@ namespace CrashOfGems.Game
         #endregion
 
         #region Управление полем
-
         /// <summary>
         /// Включение touch-а блоков игрового поля.
         /// </summary>
@@ -396,12 +366,12 @@ namespace CrashOfGems.Game
         /// <param name="flag"></param>
         private void EnableCollider2D(bool flag)
         {
-            for (int x = 0; x < height; x++)
+            for (int x = 0; x < _height; x++)
             {
-                for (int y = 0; y < width; y++)
+                for (int y = 0; y < _width; y++)
                 {
-                    if (field[x, y] != null)
-                        field[x, y].GetComponent<Collider2D>().enabled = flag;
+                    if (_field[x, y] != null)
+                        _field[x, y].GetComponent<Collider2D>().enabled = flag;
                 }
             }
         }
@@ -415,12 +385,12 @@ namespace CrashOfGems.Game
             Debug.Log("============================");
             string matrix = string.Empty;
 
-            for (int y = width - 1; y >= 0; y--)
+            for (int y = _width - 1; y >= 0; y--)
             {
                 string row = string.Empty;
-                for (int x = 0; x < height; x++)
+                for (int x = 0; x < _height; x++)
                 {
-                    row += (field[x, y] == null ? 0 : 1);
+                    row += (_field[x, y] == null ? 0 : 1);
                 }
                 matrix += (row + "\n");
             }

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace CrashOfGems.Components
 {
@@ -7,14 +6,20 @@ namespace CrashOfGems.Components
     {
         public int multiplierValue = 2;
 
+        private Animator _animator;
         private void Awake()
         {
-
+            _animator = GetComponent<Animator>();
         }
 
-        public void Destroy()
+        public void StartDestroy()
         {
-            //Debug.Log("Multiplier destroy animation...");
+            EndDestroy();
+        }
+
+        public void EndDestroy()
+        {
+            Destroy(gameObject);
         }
     }
 }

@@ -1,7 +1,12 @@
-﻿using UnityEngine;
-using System.Collections;
-
-public interface IBlock
+﻿public interface IBlock
 {
-    void Destroy();
+    /// <summary>
+    /// Запуск анимации уничтожения.
+    /// </summary>
+    void StartDestroy();
+    
+    /// <summary>
+    /// Функция, срабатывающая в конце анимации уничтожения (event callback).
+    /// </summary>
+    void EndDestroy();
 }

@@ -11,7 +11,7 @@ public class BlockFactory : MonoBehaviour
     public GameObject prefabBlock;
     public BlockSprite[] sprites;
 
-    private System.Random rnd;
+    private System.Random _rnd;
     private static BlockFactory _instance;
 
     public static BlockFactory Instance
@@ -26,7 +26,7 @@ public class BlockFactory : MonoBehaviour
 
     private void Awake()
     {
-        rnd = new System.Random();
+        _rnd = new System.Random();
     }
 
     /// <summary>
@@ -149,7 +149,7 @@ public class BlockFactory : MonoBehaviour
 
     private int GetRandomSpriteNumber()
     {
-        return rnd.Next(0, sprites.Length);
+        return _rnd.Next(0, sprites.Length);
     }
     #endregion
 }

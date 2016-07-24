@@ -51,88 +51,88 @@ namespace CrashOfGems.Management
 
         #endregion
 
-        private GameField gameField;
-        private BlockComponent touchedBlock;
-        private float startAnimationTime;
-        private AudioSource audioSource;
-        private float timer;
-        private long levelScore;
-        private long totalScore;
-        private long thresholdCurrent;
-        private long thresholdNext;
-        private int currentLevel;
-        private bool isPause;
-        private bool isGameOver;
+        private GameField _gameField;
+        private BlockComponent _touchedBlock;
+        private float _startAnimationTime;
+        private AudioSource _audioSource;
+        private float _timer;
+        private long _levelScore;
+        private long _totalScore;
+        private long _thresholdCurrent;
+        private long _thresholdNext;
+        private int _currentLevel;
+        private bool _isPause;
+        private bool _isGameOver;
 
-        private static GameManager instance;
+        private static GameManager _instance;
         public static GameManager Instance
         {
             get
             {
-                if (instance == null)
-                    instance = (GameManager)FindObjectOfType(typeof(GameManager));
-                return instance;
+                if (_instance == null)
+                    _instance = (GameManager)FindObjectOfType(typeof(GameManager));
+                return _instance;
             }
         }
 
         private void Awake()
         {
-            audioSource = GetComponent<AudioSource>();
-            audioSource.clip = soundClickEvent;
+            _audioSource = GetComponent<AudioSource>();
+            _audioSource.clip = soundClickEvent;
 
-            gameField = new GameField(fieldWidth, fieldHeight);
-            CameraAdjust.FitCamera(cam, gameField, BlockFactory.Instance.sprites[0].blockSprite);
+            _gameField = new GameField(fieldWidth, fieldHeight);
+            CameraAdjust.FitCamera(cam, _gameField, BlockFactory.Instance.sprites[0].blockSprite);
 
             // Перестроение поля.
-            while (!gameField.ValidateField())
+            while (!_gameField.ValidateField())
             {
-                gameField = BlockDestroyer.DestroyField(gameField);
-                gameField = new GameField(fieldWidth, fieldHeight);
+                _gameField = BlockDestroyer.DestroyField(_gameField);
+                _gameField = new GameField(fieldWidth, fieldHeight);
             }
 
-            currentLevel = 0;
+            _currentLevel = 0;
             InitNextLevel();
         }
 
         private void InitNextLevel()
         {
-            timer = timeLimit;
-            levelScore = 0;
-            thresholdNext = thresholdNext + thresholdDelta;
-            thresholdCurrent = thresholdNext;
-            currentLevel++;
+            _timer = timeLimit;
+            _levelScore = 0;
+            _thresholdNext = _thresholdNext + thresholdDelta;
+            _thresholdCurrent = _thresholdNext;
+            _currentLevel++;
 
-            UIManager.Instance.SetLevel(currentLevel);
-            UIManager.Instance.SetLevelScore(levelScore);
-            UIManager.Instance.SetThresholdValue(thresholdCurrent);
-            UIManager.Instance.SetTimer(timer);
+            UIManager.Instance.SetLevel(_currentLevel);
+            UIManager.Instance.SetLevelScore(_levelScore);
+            UIManager.Instance.SetThresholdValue(_thresholdCurrent);
+            UIManager.Instance.SetTimer(_timer);
         }
 
         // Таймеры.
         private void Update()
         {
-            if (!isGameOver)
+            if (!_isGameOver)
             {
                 // Уровень пройден. Перейти на следующий.
-                if (levelScore >= thresholdCurrent && timer > 0)
+                if (_levelScore >= _thresholdCurrent && _timer > 0)
                 {
                     InitNextLevel();
                 }
                 // Игра проиграна.
-                else if (timer <= 0 && levelScore < thresholdCurrent)
+                else if (_timer <= 0 && _levelScore < _thresholdCurrent)
                 {
-                    gameField.DisableBlockTouch();
-                    UIManager.Instance.ShowDefeatScreen(totalScore, currentLevel);
-                    isGameOver = true;
+                    _gameField.DisableBlockTouch();
+                    UIManager.Instance.ShowDefeatScreen(_totalScore, _currentLevel);
+                    _isGameOver = true;
                 }
                 else
                 {
                     // Нет паузы.   
-                    if (!isPause)
+                    if (!_isPause)
                     {
                         // Обратный отсчет таймера.
-                        timer -= Time.deltaTime;
-                        UIManager.Instance.SetTimer(timer);
+                        _timer -= Time.deltaTime;
+                        UIManager.Instance.SetTimer(_timer);
                     }
                 }
             }
@@ -144,25 +144,25 @@ namespace CrashOfGems.Management
         private void FixedUpdate()
         {
             // Анимация обрушения колонок.
-            if (gameField.IsRebuildRowsOn)
+            if (_gameField.IsRebuildRowsOn)
             {
-                if (gameField.RebuildRows(blockAnimationSpeed, startAnimationTime))
+                if (_gameField.RebuildRows(blockAnimationSpeed, _startAnimationTime))
                 {
-                    gameField.IsRebuildRowsOn = false;
-                    gameField.UpdateCols();
+                    _gameField.IsRebuildRowsOn = false;
+                    _gameField.UpdateCols();
 
                     // Начать анимацию сдвига влево.
-                    gameField.IsRebuildColsOn = true;
-                    startAnimationTime = Time.time;
+                    _gameField.IsRebuildColsOn = true;
+                    _startAnimationTime = Time.time;
                 }
             }
 
             // Анимация схлопывания колонок.
-            if (gameField.IsRebuildColsOn)
+            if (_gameField.IsRebuildColsOn)
             {
-                if (gameField.RebuildCols(blockAnimationSpeed, startAnimationTime))
+                if (_gameField.RebuildCols(blockAnimationSpeed, _startAnimationTime))
                 {
-                    gameField.IsRebuildColsOn = false;
+                    _gameField.IsRebuildColsOn = false;
                     RebuildAnimationEndCallback();
                 }
             }
@@ -175,22 +175,22 @@ namespace CrashOfGems.Management
         private void RebuildAnimationEndCallback()
         {
             // Проверка существования вариантов ходов.
-            if (!gameField.ValidateField())
+            if (!_gameField.ValidateField())
             {
                 // Ходов нет, а поле целое -> уничтожить поле.
-                if (gameField.IsFieldFull)
-                    gameField = BlockDestroyer.DestroyField(gameField);
+                if (_gameField.IsFieldFull)
+                    _gameField = BlockDestroyer.DestroyField(_gameField);
 
                 // Начисление очков за полностью уничтоженное поле.
-                if (gameField.IsFieldEmpty)
+                if (_gameField.IsFieldEmpty)
                 {
-                    totalScore += (long)(fieldDestroyCoefficient * thresholdCurrent);
-                    levelScore += (long)(fieldDestroyCoefficient * thresholdCurrent);
-                    UIManager.Instance.SetLevelScore(levelScore);
+                    _totalScore += (long)(fieldDestroyCoefficient * _thresholdCurrent);
+                    _levelScore += (long)(fieldDestroyCoefficient * _thresholdCurrent);
+                    UIManager.Instance.SetLevelScore(_levelScore);
                 }
 
                 // Обновить ИП.
-                gameField.GenerateNewBlocks(
+                _gameField.GenerateNewBlocks(
                     UIManager.Instance.redVessel.BonusCount,
                     UIManager.Instance.yellowVessel.BonusCount,
                     UIManager.Instance.blueVessel.BonusCount
@@ -199,8 +199,8 @@ namespace CrashOfGems.Management
                 UIManager.Instance.EmptyVessels();
 
                 // Запустить анимацию.
-                startAnimationTime = Time.time;
-                gameField.IsRebuildRowsOn = true;
+                _startAnimationTime = Time.time;
+                _gameField.IsRebuildRowsOn = true;
             }
         }
 
@@ -211,9 +211,9 @@ namespace CrashOfGems.Management
         public void TouchBlockCallback(BlockComponent touched)
         {
             // Уничтожение блоков разрешено, только тогда, когда не запущена анимация.
-            if (!gameField.IsRebuildColsOn && !gameField.IsRebuildRowsOn)
+            if (!_gameField.IsRebuildColsOn && !_gameField.IsRebuildRowsOn)
             {
-                touchedBlock = touched;
+                _touchedBlock = touched;
 
                 Dictionary<BlockType, long> points = new Dictionary<BlockType, long>();
                 int multiplier; // Общее значение бонуса умножения.
@@ -227,17 +227,10 @@ namespace CrashOfGems.Management
                     UIManager.Instance.UpdateVessels(points);
 
                     long pts = GetTotalPoints(points) * multiplier;
-                    levelScore += pts;
-                    totalScore += pts;
+                    _levelScore += pts;
+                    _totalScore += pts;
 
-                    UIManager.Instance.SetLevelScore(levelScore);
-                    
-                    // Обрушить строки.
-                    gameField.UpdateRows();
-
-                    // Начать анимацию "обрушения" колонок.
-                    gameField.IsRebuildRowsOn = true;
-                    startAnimationTime = Time.time;
+                    UIManager.Instance.SetLevelScore(_levelScore);
                 }
             }
         }
@@ -248,20 +241,31 @@ namespace CrashOfGems.Management
         private void DestroyBlocks(BlockComponent touched, ref Dictionary<BlockType, long> points, out int multiplier)
         {
             multiplier = 1;
-            List<BlockComponent> destroyList = BlockDestroyer.GetMatchedElements(gameField, touched);
+            List<BlockComponent> destroyList = BlockDestroyer.GetMatchedElements(_gameField, touched);
 
             if (destroyList.Count >= matchCount)
             {
-                BlockDestroyer.CommitBonuses(ref destroyList, gameField);
+                BlockDestroyer.CommitBonuses(ref destroyList, _gameField);
                 points = BlockDestroyer.CalculatePoints(destroyList, matchCount, startBlockCost, deltaBlockCost);
                 multiplier = BlockDestroyer.CalculateBonusMultiplier(destroyList);
-                audioSource.Play();
+                _audioSource.Play();
                 destroyList.ForEach(i =>
                 {
-                    i.Destroy();
-                    gameField.Field[i.x, i.y] = null;
+                    i.StartDestroy();
                 });
             }
+        }
+
+        public void SetFieldItemNull(int x, int y)
+        {
+            _gameField.Field[x, y] = null;
+
+            // Обрушить строки.
+            _gameField.UpdateRows();
+
+            // Начать анимацию "обрушения" колонок.
+            _gameField.IsRebuildRowsOn = true;
+            _startAnimationTime = Time.time;
         }
 
         private long GetTotalPoints(Dictionary<BlockType, long> points)
@@ -274,8 +278,8 @@ namespace CrashOfGems.Management
         /// </summary>
         public void PauseEnabledCallback()
         {
-            isPause = true;
-            gameField.DisableBlockTouch();
+            _isPause = true;
+            _gameField.DisableBlockTouch();
         }
 
         /// <summary>
@@ -283,8 +287,8 @@ namespace CrashOfGems.Management
         /// </summary>
         public void PauseDisabledCallback()
         {
-            isPause = false;
-            gameField.EnableBlockTouch();
+            _isPause = false;
+            _gameField.EnableBlockTouch();
         }
         #endregion
     }
