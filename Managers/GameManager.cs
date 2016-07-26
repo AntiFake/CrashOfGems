@@ -105,7 +105,7 @@ namespace CrashOfGems.Management
             UIManager.Instance.SetLevel(_currentLevel);
             UIManager.Instance.SetLevelScore(_levelScore);
             UIManager.Instance.SetThresholdValue(_thresholdCurrent);
-            UIManager.Instance.SetTimer(_timer);
+            UIManager.Instance.UpdateTimer(_timer);
         }
 
         // Таймеры.
@@ -132,7 +132,7 @@ namespace CrashOfGems.Management
                     {
                         // Обратный отсчет таймера.
                         _timer -= Time.deltaTime;
-                        UIManager.Instance.SetTimer(_timer);
+                        UIManager.Instance.UpdateTimer(_timer);
                     }
                 }
             }

@@ -11,11 +11,12 @@ namespace CrashOfGems.Management
     {
         #region Экран "Игра"
         public Button btnPause;
-        public Text timer;
         public Text totalScore;
         public Text threshold;
         public Text level;
 
+
+        public UITimerComponent timer;
         public UIVesselComponent redVessel;
         public UIVesselComponent yellowVessel;
         public UIVesselComponent blueVessel;
@@ -68,18 +69,9 @@ namespace CrashOfGems.Management
 
         #region Функции управления ЭУ UI
 
-        public void SetTimer(float timer)
+        public void UpdateTimer(float timerValue)
         {
-            int minutes = (int)(timer / 60);
-            int seconds = (int)(timer % 60);
-
-            // Определение цвета.
-            if (timer <= 10)
-                this.timer.color = Color.red;
-            else
-                this.timer.color = Color.white;
-
-            this.timer.text = string.Format("{0:0}:{1:00}", minutes, seconds);
+            timer.SetTimer(timerValue);
         }
 
         public void SetLevel(int lvl)
