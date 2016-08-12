@@ -1,16 +1,19 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Компонент для кнопки, который обеспечивает закртие приложения.
-/// </summary>
-public class UIAppCloseComponent : MonoBehaviour
+namespace Alchemy.UI
 {
-    private Button button;
-
-	private void Start()
+    /// <summary>
+    /// Компонент для кнопки, который обеспечивает закртие приложения.
+    /// </summary>
+    public class UIAppCloseComponent : MonoBehaviour
     {
-        button = GetComponent<Button>();
-        button.onClick.AddListener(() => Application.Quit());
-	}
+        private Button button;
+
+        private void Start()
+        {
+            button = GetComponent<Button>();
+            button.onClick.AddListener(() => Application.Quit());
+        }
+    }
 }

@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UIInventoryListComponent : MonoBehaviour
     {
@@ -23,7 +22,7 @@ namespace Alchemy
         #region Визуализация
         private void VisualizeList()
         {
-            foreach (var inventoryItem in GameManager.gameManager.GetPlayerInventory())
+            foreach (var inventoryItem in GameManager.Instance.GetPlayerInventory())
             {
                 var listItem = Instantiate(inventoryItemInstance);
                 listItem.transform.SetParent(scrollContent.transform, false);

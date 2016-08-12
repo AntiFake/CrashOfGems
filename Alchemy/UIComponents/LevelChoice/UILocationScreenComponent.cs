@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UILocationScreenComponent : MonoBehaviour
     {

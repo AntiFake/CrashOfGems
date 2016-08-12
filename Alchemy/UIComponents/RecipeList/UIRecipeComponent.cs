@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using UnityEngine.UI;
+using Alchemy.Model;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UIRecipeComponent : MonoBehaviour
     {
@@ -58,8 +58,8 @@ namespace Alchemy
 
         public void BtnCookOnClickEvent()
         {
-            if (GameManager.gameManager.CheckCooking(Model.potionType))
-                GameManager.gameManager.Cook(Model.potionType);
+            if (GameManager.Instance.CheckCooking(Model.potionType))
+                GameManager.Instance.Cook(Model.potionType);
             else
                 Debug.Log("Не могу приготовить!");
         }

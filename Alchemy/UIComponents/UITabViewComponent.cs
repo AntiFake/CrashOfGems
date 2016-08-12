@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using System;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     [Serializable]
     public class TabButtonContent

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Alchemy
+namespace Alchemy.Model
 {
 
     #region Перечисления
@@ -155,9 +155,8 @@ namespace Alchemy
     }
     #endregion
 
-    //[CreateAssetMenu()]
     [Serializable]
-    public class ApplicationData //ScriptableObject
+    public class ApplicationData
     {
         [SerializeField]
         public List<Ingredient> ingredientList;

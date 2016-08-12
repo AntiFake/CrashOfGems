@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
+using Alchemy.Model;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UIOpenLevelPreviewComponent : MonoBehaviour
     {

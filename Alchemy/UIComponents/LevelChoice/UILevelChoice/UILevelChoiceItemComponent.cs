@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using Alchemy.Model;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UILevelChoiceItemComponent : MonoBehaviour
     {

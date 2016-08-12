@@ -1,18 +1,21 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class UIRecipeIngredientComponent : MonoBehaviour
+namespace Alchemy.UI
 {
-    public Image icon;
-    public Text count;
-
-    /// <summary>
-    /// Отображение информации об ингредиенте.
-    /// </summary>
-    public void Visualize(Sprite sprite, string count)
+    public class UIRecipeIngredientComponent : MonoBehaviour
     {
-        icon.sprite = sprite;
-        this.count.text = count;
-        gameObject.SetActive(true);
+        public Image icon;
+        public Text count;
+
+        /// <summary>
+        /// Отображение информации об ингредиенте.
+        /// </summary>
+        public void Visualize(Sprite sprite, string count)
+        {
+            icon.sprite = sprite;
+            this.count.text = count;
+            gameObject.SetActive(true);
+        }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UIRecipeListComponent : MonoBehaviour
     {
@@ -24,13 +22,13 @@ namespace Alchemy
         /// </summary>
         private void VisualizeList()
         {
-            foreach (var recipe in GameManager.gameManager.RecipeList)
+            foreach (var recipe in GameManager.Instance.RecipeList)
             {
                 var listItem = Instantiate(recipeInstance);
                 listItem.transform.SetParent(scrollContent.transform, false);
 
                 var recipeComponent = listItem.GetComponent<UIRecipeComponent>();
-                recipeComponent.Model = GameManager.gameManager.GetRecipeViewModel(recipe.potionType);
+                recipeComponent.Model = GameManager.Instance.GetRecipeViewModel(recipe.potionType);
                 recipeComponent.Visualize();
             }
         }

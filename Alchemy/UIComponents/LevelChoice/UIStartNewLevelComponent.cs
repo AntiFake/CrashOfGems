@@ -2,7 +2,7 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UIStartNewLevelComponent : MonoBehaviour
     {

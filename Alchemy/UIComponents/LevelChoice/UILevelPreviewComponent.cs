@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
+using Alchemy.Model;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UILevelPreviewComponent : MonoBehaviour
     {
@@ -15,7 +15,7 @@ namespace Alchemy
 
         public void Visualize(LevelType lvlType, DifficultyType dflcType)
         {
-            var viewModel = GameManager.gameManager.GetLevelPreviewViewModel(lvlType, dflcType);
+            var viewModel = GameManager.Instance.GetLevelPreviewViewModel(lvlType, dflcType);
 
             levelTitle.text = viewModel.levelName;
             levelIcon.sprite = viewModel.levelImage;
@@ -30,7 +30,7 @@ namespace Alchemy
 
         public void UpdateVisualization(LevelType lvlType, DifficultyType dflcType)
         {
-            var viewModel = GameManager.gameManager.GetLevelPreviewViewModel(lvlType, dflcType);
+            var viewModel = GameManager.Instance.GetLevelPreviewViewModel(lvlType, dflcType);
 
             levelTitle.text = viewModel.levelName;
             levelIcon.sprite = viewModel.levelImage;

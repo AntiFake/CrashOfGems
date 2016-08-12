@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace Alchemy
+namespace Alchemy.UI
 {
     public class UICloseLevelPreviewComponent : MonoBehaviour
     {

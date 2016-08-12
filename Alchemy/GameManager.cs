@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
-using System;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using Alchemy.Model;
 
 namespace Alchemy
 {
@@ -12,17 +12,17 @@ namespace Alchemy
     /// </summary>
     public partial class GameManager : MonoBehaviour
     {
-        public static GameManager gameManager;
+        public static GameManager Instance;
         public ApplicationData applicationData;
         private PlayerData playerData;
 
         private void Awake()
         {
-            if (gameManager == null)
+            if (Instance == null)
             {
                 // Не уничтожать объект при переходе между сценами.
                 DontDestroyOnLoad(gameObject);
-                gameManager = this;
+                Instance = this;
             }
             //else if (gameManager != this)
             //{
@@ -323,24 +323,7 @@ namespace Alchemy
 
         public void OnGUI()
         {
-            //if (applicationData == null)
-            //    GUILayout.Label("Нифига не загрузилась....");
-            //else
-            //    GUILayout.Label(applicationData.ingredientList.Count.ToString());
-
-            //GUILayout.Label(Application.streamingAssetsPath + "/Assets/Resources/TestData");
-
-            //GUILayout.Label("Level: " + playerInfo.level.ToString());
-            //GUILayout.Label("Health: " + playerInfo.health.ToString());
-
-            //if (GUILayout.Button("Add health"))
-            //    playerInfo.health += 10;
-
-            //if (GUILayout.Button("Add level"))
-            //    playerInfo.level += 1;
-
-            //if (GUILayout.Button("SaveData"))
-            //    SaveUserData();
+            
         }
     }
 }
