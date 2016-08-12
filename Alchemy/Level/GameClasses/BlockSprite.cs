@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System;
-using CrashOfGems.Enums;
 
 namespace Alchemy.Level
 {
@@ -12,15 +11,6 @@ namespace Alchemy.Level
     {
         [SerializeField]
         public Sprite blockSprite;
-
-        [SerializeField]
-        public Sprite bombSprite;
-
-        [SerializeField]
-        public Sprite multiplicationSprite;
-
-        [SerializeField]
-        public Sprite lightningSprite;
 
         [SerializeField]
         public BlockType blockType;

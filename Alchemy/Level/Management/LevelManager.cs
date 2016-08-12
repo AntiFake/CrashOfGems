@@ -183,14 +183,8 @@ namespace Alchemy.Level
                     UILevelManager.Instance.SetLevelScore(_levelScore);
                 }
 
-                // Обновить ИП.
-                _gameField.GenerateNewBlocks(
-                    UILevelManager.Instance.redVessel.BonusCount,
-                    UILevelManager.Instance.yellowVessel.BonusCount,
-                    UILevelManager.Instance.blueVessel.BonusCount
-                );
-
-                UILevelManager.Instance.EmptyVessels();
+                // Обновить игровое поле.
+                _gameField.GenerateNewBlocks();
 
                 // Запустить анимацию.
                 _startAnimationTime = Time.time;
@@ -210,17 +204,14 @@ namespace Alchemy.Level
                 _touchedBlock = touched;
 
                 Dictionary<BlockType, long> points = new Dictionary<BlockType, long>();
-                int multiplier; // Общее значение бонуса умножения.
 
                 // Уничтожение блоков ип.
-                DestroyBlocks(touched, ref points, out multiplier);
+                DestroyBlocks(touched, ref points);
 
                 // Некоторые блоки были уничтожены.
                 if (points.Any())
                 {
-                    UILevelManager.Instance.UpdateVessels(points);
-
-                    long pts = GetTotalPoints(points) * multiplier;
+                    long pts = GetTotalPoints(points);
                     _levelScore += pts;
                     _totalScore += pts;
 
@@ -230,18 +221,15 @@ namespace Alchemy.Level
         }
 
         /// <summary>
-        /// Уничтожение блоков и обновление "мензурок".
+        /// Уничтожение блоков.
         /// </summary>
-        private void DestroyBlocks(BlockComponent touched, ref Dictionary<BlockType, long> points, out int multiplier)
+        private void DestroyBlocks(BlockComponent touched, ref Dictionary<BlockType, long> points)
         {
-            multiplier = 1;
             List<BlockComponent> destroyList = BlockDestroyer.GetMatchedElements(_gameField, touched);
 
             if (destroyList.Count >= matchCount)
             {
-                BlockDestroyer.CommitBonuses(ref destroyList, _gameField);
                 points = BlockDestroyer.CalculatePoints(destroyList, matchCount, startBlockCost, deltaBlockCost);
-                multiplier = BlockDestroyer.CalculateBonusMultiplier(destroyList);
                 _audioSource.Play();
                 destroyList.ForEach(i =>
                 {

@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using CrashOfGems.Enums;
 
 namespace Alchemy.Level
 {
@@ -185,15 +184,11 @@ namespace Alchemy.Level
         /// Достраивает на место удаленных элементов новые. 
         /// При этом определяет позиции этих элементов за пределами экрана для последующей анимации.
         /// </summary>
-        public void GenerateNewBlocks(int bombCount, int multiplicationCount, int lightningCount /*+ другие бонусы как появятся*/)
+        public void GenerateNewBlocks()
         {
             int sortNullX;
             Vector2 pos;
             List<KeyValuePair<int, int>> emptyPositions = GetEmptyPositions();
-            List<KeyValuePair<int, int>> bombPositions = GetRandomBonusPositions(ref emptyPositions, bombCount);
-            List<KeyValuePair<int, int>> multiplicationPositions = GetRandomBonusPositions(ref emptyPositions, multiplicationCount);
-            List<KeyValuePair<int, int>> lightningPositions = GetRandomBonusPositions(ref emptyPositions, lightningCount);
-            //... другие бонусы.
 
             for (int y = 0; y < _width; y++)
             {
@@ -203,16 +198,7 @@ namespace Alchemy.Level
                     if (_field[x, y] == null)
                     {
                         pos = new Vector2(y * _spriteWidth, (_spriteHeight * _height) + sortNullX * _spriteHeight);
-
-                        // Проверка: нужно ли поставить бонус на это место.
-                        if (bombPositions != null && bombPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            _field[x, y] = BlockFactory.Instance.CreateBomb(x, y, pos, 2);
-                        else if (multiplicationPositions != null && multiplicationPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            _field[x, y] = BlockFactory.Instance.CreateMultiplier(x, y, pos, 2);
-                        else if (lightningPositions != null && lightningPositions.Contains(new KeyValuePair<int, int>(x, y)))
-                            _field[x, y] = BlockFactory.Instance.CreateLightning(x, y, pos, 4);
-                        else
-                            _field[x, y] = BlockFactory.Instance.CreateBlock(x, y, pos);
+                        _field[x, y] = BlockFactory.Instance.CreateBlock(x, y, pos);
                         sortNullX++;
                     }
                 }
@@ -371,27 +357,6 @@ namespace Alchemy.Level
                         _field[x, y].GetComponent<Collider2D>().enabled = flag;
                 }
             }
-        }
-
-        #endregion
-
-        #region Лог
-
-        public void PrintField()
-        {
-            Debug.Log("============================");
-            string matrix = string.Empty;
-
-            for (int y = _width - 1; y >= 0; y--)
-            {
-                string row = string.Empty;
-                for (int x = 0; x < _height; x++)
-                {
-                    row += (_field[x, y] == null ? 0 : 1);
-                }
-                matrix += (row + "\n");
-            }
-            Debug.Log(matrix);
         }
 
         #endregion

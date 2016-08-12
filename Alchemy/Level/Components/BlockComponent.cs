@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using CrashOfGems.Enums;
 
 namespace Alchemy.Level
 {
@@ -12,7 +11,6 @@ namespace Alchemy.Level
         public int x;
         public int y;
         public BlockType type;
-        public BonusType bonusType;
 
         private Animator _animator;
 
@@ -28,21 +26,7 @@ namespace Alchemy.Level
 
         public void StartDestroy()
         {
-            switch (bonusType)
-            {
-                case BonusType.None:
-                    _animator.SetTrigger("Destroyed");
-                    break;
-                case BonusType.Bomb:
-                    gameObject.GetComponent<BombComponent>().StartDestroy();
-                    break;
-                case BonusType.Lightning:
-                    gameObject.GetComponent<LightningComponent>().StartDestroy();
-                    break;
-                case BonusType.Multiplication:
-                    gameObject.GetComponent<MultiplierComponent>().StartDestroy();
-                    break;
-            }
+            _animator.SetTrigger("Destroyed");
         }
 
         public void EndDestroy()

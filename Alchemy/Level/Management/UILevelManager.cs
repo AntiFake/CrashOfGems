@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
 namespace Alchemy.Level
@@ -12,13 +11,7 @@ namespace Alchemy.Level
         public Text totalScore;
         public Text threshold;
         public Text level;
-
-
         public UITimerComponent timer;
-        public UIVesselComponent redVessel;
-        public UIVesselComponent yellowVessel;
-        public UIVesselComponent blueVessel;
-
         #endregion
 
         #region Экран "Пауза".
@@ -98,36 +91,6 @@ namespace Alchemy.Level
             finalScore.text = string.Format("Score: {0}", FormatScore(score));
             finalLevel.text = string.Format("Level: {0}", level);
         }
-
-        public void UpdateVessels(Dictionary<BlockType, long> points)
-        {
-            foreach (var key in points.Keys)
-            {
-                switch (key)
-                {
-                    case BlockType.Red:
-                        redVessel.PourIn(points[key]);
-                        break;
-                    case BlockType.Yellow:
-                        yellowVessel.PourIn(points[key]);
-                        break;
-                    case BlockType.Blue:
-                        blueVessel.PourIn(points[key]);
-                        break;
-                }
-            }
-        }
-
-        public void EmptyVessels()
-        {
-            if (redVessel.IsFullFilled)
-                redVessel.Empty();
-            if (yellowVessel.IsFullFilled)
-                yellowVessel.Empty();
-            if (blueVessel.IsFullFilled)
-                blueVessel.Empty();
-        }
-
         #endregion
 
         #region Служебные функции

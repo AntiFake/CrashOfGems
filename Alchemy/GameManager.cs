@@ -41,7 +41,7 @@ namespace Alchemy
             playerData.potions.Add(PotionType.Fire_I, 5);
 
             // Загружаем данные пользователя.
-            LoadUserData();
+            // LoadUserData();
         }
 
         #region ApplicationData
