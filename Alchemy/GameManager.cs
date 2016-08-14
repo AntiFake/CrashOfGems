@@ -279,7 +279,7 @@ namespace Alchemy
 
         #endregion
 
-        #region LevelInfo
+        #region LevelPreview
 
         /// <summary>
         /// Данные модели используются для построения уровня.
@@ -314,9 +314,33 @@ namespace Alchemy
         /// </summary>
         public void SaveNewLevelSettings(LevelType lvlType, DifficultyType dflcType, List<PotionType> potionBonuses)
         {
-            LevelModel.potions = potionBonuses;
-            LevelModel.difficultyType = dflcType;
-            LevelModel.levelType = lvlType;
+            LevelModel = new LevelModel()
+            {
+                potions = potionBonuses,
+                difficultyType = dflcType,
+                levelType = lvlType,
+                resources = GetLevelResources(lvlType, dflcType)
+            };
+        }
+
+        /// <summary>
+        /// Получение списка ресурсов для уровня.
+        /// </summary>
+
+        private List<ResourceLevelModel> GetLevelResources(LevelType lvlType, DifficultyType dflcType)
+        {
+            return (
+                from r in applicationData.resources
+                join rtl in applicationData.resourcesToLevel on r.resourceType equals rtl.resourceType
+                where rtl.difficultyType == dflcType && rtl.levelType == lvlType
+                select new ResourceLevelModel()
+                {
+                    resourceType = r.resourceType,
+                    sprite = r.sprite,
+                    low_boundary = rtl.low_boundary,
+                    upper_boundary = rtl.top_boundary
+                }
+            ).ToList();
         }
 
         #endregion

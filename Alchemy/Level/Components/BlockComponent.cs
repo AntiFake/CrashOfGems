@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Alchemy.Model;
 
 namespace Alchemy.Level
 {
@@ -10,7 +11,7 @@ namespace Alchemy.Level
     {
         public int x;
         public int y;
-        public BlockType type;
+        public ResourceType type;
 
         private Animator _animator;
 

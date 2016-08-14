@@ -19,7 +19,6 @@ namespace Alchemy.Level
 
         public Button psBtnResume;
         public Button psBtnRestart;
-        public Button psBtnExit;
 
         #endregion
 
@@ -52,7 +51,6 @@ namespace Alchemy.Level
             // Экран "Пауза".
             psBtnResume.onClick.AddListener(() => { OnResumeButtonClick(); });
             psBtnRestart.onClick.AddListener(() => { OnRestartButtonClick(); });
-            psBtnExit.onClick.AddListener(() => { OnExitButtonClick(); });
 
             // Экран "Игра окончена".
             goBtnRestart.onClick.AddListener(() => { OnRestartButtonClick(); });
@@ -136,11 +134,6 @@ namespace Alchemy.Level
         public void OnRestartButtonClick()
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
-
-        public void OnExitButtonClick()
-        {
-            Application.Quit();
         }
 
         #endregion

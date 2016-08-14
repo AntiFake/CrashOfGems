@@ -1,11 +1,13 @@
-﻿using UnityEngine;
+﻿using Alchemy.Model;
+using UnityEngine;
+using System.Collections.Generic;
 
 namespace Alchemy.Level
 {
     public class BlockFactory : MonoBehaviour
     {
         public GameObject prefabBlock;
-        public BlockSprite[] sprites;
+        public GameObject substrateItem;
 
         private System.Random _rnd = new System.Random();
         private static BlockFactory _instance;
@@ -28,16 +30,32 @@ namespace Alchemy.Level
         /// <summary>
         /// Создание блока. 
         /// </summary>
-        public GameObject CreateBlock(int x, int y, Vector2 pos)
+        public GameObject CreateBlock(int x, int y, Vector2 pos, GameObject fieldParent)
         {
-            var block = CreateNewFieldItem(prefabBlock, pos, x, y);
+            var block = CreateNewFieldItem(prefabBlock, pos, x, y, fieldParent);
             return block;
+        }
+
+        public GameObject[,] CreateFieldSubstrate(int width, int height, float spriteWidth, float spriteHeight, GameObject substrateParent)
+        {
+            var substrate = new GameObject[height, width];
+
+            for (int x = 0; x < height; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
+                    substrate[x, y] = (GameObject)Instantiate(substrateItem, new Vector3(y * spriteWidth, x * spriteHeight, 0f), Quaternion.identity);
+                    substrate[x, y].transform.SetParent(substrateParent.transform, false);
+                }
+            }
+
+            return substrate;
         }
 
         /// <summary>
         /// Генерация поля.
         /// </summary>
-        public GameObject[,] GenerateField(int width, int height, float spriteWidth, float spriteHeight)
+        public GameObject[,] GenerateField(int width, int height, float spriteWidth, float spriteHeight, GameObject fieldParent)
         {
             var field = new GameObject[height, width];
 
@@ -45,7 +63,8 @@ namespace Alchemy.Level
             {
                 for (int y = 0; y < width; y++)
                 {
-                    field[x, y] = CreateBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight));
+                    field[x, y] = CreateBlock(x, y, new Vector2(y * spriteWidth, x * spriteHeight), fieldParent);
+                    field[x, y].transform.SetParent(fieldParent.transform, false);
                 }
             }
 
@@ -53,20 +72,22 @@ namespace Alchemy.Level
         }
 
         #region Служебные функции
-        private GameObject CreateNewFieldItem(GameObject prefab, Vector2 pos, int x, int y)
+        private GameObject CreateNewFieldItem(GameObject prefab, Vector2 pos, int x, int y, GameObject fieldParent)
         {
             int spriteNumber = GetRandomSpriteNumber();
 
             var block = (GameObject)GameObject.Instantiate(prefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
             block.name = string.Format("{0};{1}", x, y);
 
-            SetBlockComponent(block, x, y, sprites[spriteNumber].blockType);
+            SetBlockComponent(block, x, y, GameManager.Instance.LevelModel.resources[spriteNumber].resourceType);
             SetSpriteRendererComponent(block, spriteNumber);
+
+            block.transform.SetParent(fieldParent.transform, false);
 
             return block;
         }
 
-        private void SetBlockComponent(GameObject block, int x, int y, BlockType blockType)
+        private void SetBlockComponent(GameObject block, int x, int y, ResourceType blockType)
         {
             BlockComponent blockComponent = block.GetComponent<BlockComponent>();
             blockComponent.x = x;
@@ -77,12 +98,28 @@ namespace Alchemy.Level
         private void SetSpriteRendererComponent(GameObject block, int spriteNumber)
         {
             SpriteRenderer sr = block.GetComponent<SpriteRenderer>();
-            sr.sprite = sprites[spriteNumber].blockSprite;
+            sr.sprite = GameManager.Instance.LevelModel.resources[spriteNumber].sprite;
+        }
+
+        private double GetRandomNumber(double minimum, double maximum)
+        {
+            return _rnd.NextDouble() * (maximum - minimum) + minimum;
         }
 
         private int GetRandomSpriteNumber()
         {
-            return _rnd.Next(0, sprites.Length);
+            double rndNumber = GetRandomNumber(0.00, 100.00);
+
+            int i = 0;
+            foreach (var item in GameManager.Instance.LevelModel.resources)
+            {
+                if (item.low_boundary <= rndNumber && item.upper_boundary > rndNumber)
+                    return i;
+                i++;
+            }
+
+            // default.
+            return 0;
         }
         #endregion
     }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Alchemy.Model;
 
 namespace Alchemy.Level
 {
@@ -8,6 +9,8 @@ namespace Alchemy.Level
     {
         // Игровое поле.
         private GameObject[,] _field;
+        private GameObject[,] _substrate;
+
         private int _width;
         private int _height;
 
@@ -63,16 +66,18 @@ namespace Alchemy.Level
         }
         #endregion
 
-        public GameField(int width, int height)
+        public GameField(int width, int height, bool createSubstrate, GameObject substrateParent, GameObject fieldParent)
         {
-            this._width = width;
-            this._height = height;
+            _width = width;
+            _height = height;
 
+            _spriteWidth = GameManager.Instance.LevelModel.resources[0].sprite.bounds.size.x;
+            _spriteHeight = GameManager.Instance.LevelModel.resources[0].sprite.bounds.size.y;
 
-            _spriteWidth = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.x;
-            _spriteHeight = BlockFactory.Instance.sprites[0].blockSprite.bounds.size.y;
-            _field = BlockFactory.Instance.GenerateField(width, height, _spriteWidth, _spriteHeight);
+            if (createSubstrate)
+                _substrate = BlockFactory.Instance.CreateFieldSubstrate(width, height, _spriteWidth, _spriteHeight, substrateParent);
 
+            _field = BlockFactory.Instance.GenerateField(width, height, _spriteWidth, _spriteHeight, fieldParent);
             _rnd = new System.Random();
         }
 
@@ -184,7 +189,7 @@ namespace Alchemy.Level
         /// Достраивает на место удаленных элементов новые. 
         /// При этом определяет позиции этих элементов за пределами экрана для последующей анимации.
         /// </summary>
-        public void GenerateNewBlocks()
+        public void GenerateNewBlocks(GameObject fieldParent)
         {
             int sortNullX;
             Vector2 pos;
@@ -198,7 +203,7 @@ namespace Alchemy.Level
                     if (_field[x, y] == null)
                     {
                         pos = new Vector2(y * _spriteWidth, (_spriteHeight * _height) + sortNullX * _spriteHeight);
-                        _field[x, y] = BlockFactory.Instance.CreateBlock(x, y, pos);
+                        _field[x, y] = BlockFactory.Instance.CreateBlock(x, y, pos, fieldParent);
                         sortNullX++;
                     }
                 }
@@ -311,7 +316,7 @@ namespace Alchemy.Level
         /// <summary>
         /// Запускает валидацию рекурсивно дальше.
         /// </summary>
-        private void CommitBlockValidation(ref List<string> matchList, int x, int y, BlockType blockType)
+        private void CommitBlockValidation(ref List<string> matchList, int x, int y, ResourceType blockType)
         {
             var bc = _field[x, y].GetComponent<BlockComponent>();
             if (bc != null && bc.type == blockType)

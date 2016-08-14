@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Alchemy.Model;
 
 namespace Alchemy.Level
 {
@@ -43,6 +44,12 @@ namespace Alchemy.Level
         [Header("Доля от уровня за уничтожения всего поля")]
         public float fieldDestroyCoefficient = 0.25f;
 
+        [Header("Корневой объект для подложки")]
+        public GameObject substrateParent;
+
+        [Header("Корневой объект для поля")]
+        public GameObject gameFieldParent;
+
         #endregion
 
         private GameField _gameField;
@@ -57,6 +64,7 @@ namespace Alchemy.Level
         private int _currentLevel;
         private bool _isPause;
         private bool _isGameOver;
+        private bool _isTouched;
 
         private static LevelManager _instance;
         public static LevelManager Instance
@@ -74,14 +82,14 @@ namespace Alchemy.Level
             _audioSource = GetComponent<AudioSource>();
             _audioSource.clip = soundClickEvent;
 
-            _gameField = new GameField(fieldWidth, fieldHeight);
-            CameraAdjust.FitCamera(cam, _gameField, BlockFactory.Instance.sprites[0].blockSprite);
+            _gameField = new GameField(fieldWidth, fieldHeight, true, substrateParent, gameFieldParent);
+            CameraAdjust.FitCamera(cam, _gameField, GameManager.Instance.LevelModel.resources[0].sprite);
 
             // Перестроение поля.
             while (!_gameField.ValidateField())
             {
                 _gameField = BlockDestroyer.DestroyField(_gameField);
-                _gameField = new GameField(fieldWidth, fieldHeight);
+                _gameField = new GameField(fieldWidth, fieldHeight, false, substrateParent, gameFieldParent);
             }
 
             _currentLevel = 0;
@@ -184,11 +192,22 @@ namespace Alchemy.Level
                 }
 
                 // Обновить игровое поле.
-                _gameField.GenerateNewBlocks();
+                _gameField.GenerateNewBlocks(gameFieldParent);
 
                 // Запустить анимацию.
                 _startAnimationTime = Time.time;
                 _gameField.IsRebuildRowsOn = true;
+            }
+            // Срабатывает после каждого touch, если есть убранные элементы.
+            else if (_isTouched)
+            {
+                // Обновить игровое поле.
+                _gameField.GenerateNewBlocks(gameFieldParent);
+
+                // Запустить анимацию.
+                _startAnimationTime = Time.time;
+                _gameField.IsRebuildRowsOn = true;
+                _isTouched = false;
             }
         }
 
@@ -203,7 +222,7 @@ namespace Alchemy.Level
             {
                 _touchedBlock = touched;
 
-                Dictionary<BlockType, long> points = new Dictionary<BlockType, long>();
+                Dictionary<ResourceType, long> points = new Dictionary<ResourceType, long>();
 
                 // Уничтожение блоков ип.
                 DestroyBlocks(touched, ref points);
@@ -216,6 +235,8 @@ namespace Alchemy.Level
                     _totalScore += pts;
 
                     UILevelManager.Instance.SetLevelScore(_levelScore);
+
+                    _isTouched = true;
                 }
             }
         }
@@ -223,7 +244,7 @@ namespace Alchemy.Level
         /// <summary>
         /// Уничтожение блоков.
         /// </summary>
-        private void DestroyBlocks(BlockComponent touched, ref Dictionary<BlockType, long> points)
+        private void DestroyBlocks(BlockComponent touched, ref Dictionary<ResourceType, long> points)
         {
             List<BlockComponent> destroyList = BlockDestroyer.GetMatchedElements(_gameField, touched);
 
@@ -250,7 +271,7 @@ namespace Alchemy.Level
             _startAnimationTime = Time.time;
         }
 
-        private long GetTotalPoints(Dictionary<BlockType, long> points)
+        private long GetTotalPoints(Dictionary<ResourceType, long> points)
         {
             return points.Sum(i => i.Value);
         }

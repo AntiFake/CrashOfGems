@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Alchemy.Model;
 
 namespace Alchemy.UI
 {
@@ -22,6 +23,11 @@ namespace Alchemy.UI
         /// </summary>
         private void ButtonOnClickEvent()
         {
+            LevelType lvlType;
+            DifficultyType dflcType;
+            levelChoicePanel.GetComponent<UILevelChoiceComponent>().GetSelectedDifficultyAndLevelTypes(out lvlType, out dflcType);
+            GameManager.Instance.SaveNewLevelSettings(lvlType, dflcType, bonusChoicePanel.GetComponent<UIPotionChoiceComponent>().GetSelectedBonusPotions());
+
             SceneManager.LoadScene("Level");
         }
     }

@@ -53,7 +53,7 @@ namespace Alchemy.UI
                     bonusPotions.Add(comp.PotionType);
             }
 
-            return bonusPotions;
+            return bonusPotions == null ? new List<PotionType>() : bonusPotions;
         }
     }
 }

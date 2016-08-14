@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Alchemy.Model;
 
 namespace Alchemy.Level
 {
@@ -39,7 +40,7 @@ namespace Alchemy.Level
         /// </summary>
         private static void MatchN(ref List<BlockComponent> destroyList, GameField field, BlockComponent bc)
 		{
-			BlockType blockType = bc.type;
+			ResourceType blockType = bc.type;
 
 			// Проверка "снизу".
 			if (bc.x - 1 >= 0 && field.Field[bc.x - 1, bc.y] != null)
@@ -61,7 +62,7 @@ namespace Alchemy.Level
 		/// <summary>
 		/// Сохранение элемента в destroy-список и рекурсивный запуск функции MatchN.
 		/// </summary>
-		private static void CommitMatchedBlock(ref List<BlockComponent> destroyList, GameField field, int x, int y, BlockType blockType)
+		private static void CommitMatchedBlock(ref List<BlockComponent> destroyList, GameField field, int x, int y, ResourceType blockType)
 		{
 			var bc = field.Field[x, y].GetComponent<BlockComponent>();
 			if (bc != null && bc.type == blockType)
@@ -77,15 +78,15 @@ namespace Alchemy.Level
 		#endregion
 
 		#region Подсчет очков
-		public static Dictionary<BlockType, long> CalculatePoints(List<BlockComponent> destroyList, int matchCount, int startBlockCost, int costDelta)
+		public static Dictionary<ResourceType, long> CalculatePoints(List<BlockComponent> destroyList, int matchCount, int startBlockCost, int costDelta)
 		{
-			Dictionary<BlockType, int> destroyedBlocks = (
+			Dictionary<ResourceType, int> destroyedBlocks = (
 				from b in destroyList
 				group b by b.GetComponent<BlockComponent>().type into grp
 				select new { blockType = grp.Key, count = grp.Count() }
 			).ToDictionary(i => i.blockType, i => i.count);
 
-			Dictionary<BlockType, long> points = new Dictionary<BlockType, long>();
+			Dictionary<ResourceType, long> points = new Dictionary<ResourceType, long>();
 			var keys = destroyedBlocks.Keys;
 			
 			// Подсчет очков для каждой категории.

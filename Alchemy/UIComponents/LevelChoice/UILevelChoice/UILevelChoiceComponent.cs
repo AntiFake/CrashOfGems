@@ -39,12 +39,14 @@ namespace Alchemy.UI
         {
             for (int i = 0; i < gameObject.transform.childCount; i++)
             {
-                if (!gameObject.activeSelf)
+                var childItem = gameObject.transform.GetChild(i);
+
+                if (!childItem.gameObject.activeSelf)
                     continue;
 
-                var comp = gameObject.GetComponent<UILevelChoiceItemComponent>();
+                var comp = childItem.GetComponent<UILevelChoiceItemComponent>();
 
-                if (!comp.isSelected)
+                if (comp.isSelected)
                 {
                     levelType = comp.LevelType;
                     difficultyType = comp.DifficultyType;
