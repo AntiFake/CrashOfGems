@@ -62,6 +62,9 @@ namespace Alchemy.Model
 
         // ресурсы.
         public List<ResourceLevelModel> resources;
+
+        // конверсия.
+        public List<IngredientCost> ingredientCosts;
     }
 
     public class LevelPreviewViewModel

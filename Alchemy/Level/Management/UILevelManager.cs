@@ -8,31 +8,22 @@ namespace Alchemy.Level
     {
         #region Экран "Игра"
         public Button btnPause;
-        public Text totalScore;
-        public Text threshold;
-        public Text level;
         public UITimerComponent timer;
         #endregion
 
         #region Экран "Пауза".
         public GameObject pauseScreen;
-
         public Button psBtnResume;
         public Button psBtnRestart;
-
         #endregion
 
         #region Экран "Игра окончена"
-
         public GameObject gameOverScreen;
-
         public Button goBtnRestart;
-        public Text finalScore;
-        public Text finalLevel;
-
         #endregion
 
         private static UILevelManager _instance;
+
         public static UILevelManager Instance
         {
             get
@@ -63,31 +54,9 @@ namespace Alchemy.Level
             timer.SetTimer(timerValue);
         }
 
-        public void SetLevel(int lvl)
-        {
-            level.text = lvl.ToString();
-        }
-
-        public void SetLevelScore(long scoreValue)
-        {
-            totalScore.text = FormatScore(scoreValue);
-        }
-
-        public void SetThresholdValue(long thresholdValue)
-        {
-            threshold.text = FormatScore(thresholdValue);
-        }
-
-        public void ShowDefeatScreen(long score, int level)
+        public void ShowDefeatScreen()
         {
             gameOverScreen.gameObject.SetActive(true);
-            SetFinalScore(score, level);
-        }
-
-        private void SetFinalScore(long score, int level)
-        {
-            finalScore.text = string.Format("Score: {0}", FormatScore(score));
-            finalLevel.text = string.Format("Level: {0}", level);
         }
         #endregion
 
@@ -135,13 +104,6 @@ namespace Alchemy.Level
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
-
         #endregion
-
-        // Анимации.
-        public void FixedUpdate()
-        {
-
-        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alchemy.Model;
+using System;
 
 namespace Alchemy.Level
 {
@@ -57,14 +58,11 @@ namespace Alchemy.Level
         private float _startAnimationTime;
         private AudioSource _audioSource;
         private float _timer;
-        private long _levelScore;
-        private long _totalScore;
-        private long _thresholdCurrent;
-        private long _thresholdNext;
-        private int _currentLevel;
         private bool _isPause;
         private bool _isGameOver;
         private bool _isTouched;
+        private Dictionary<ResourceType, int> _resourceExtraction;
+        private Dictionary<IngredientType, int> _ingredientResult;
 
         private static LevelManager _instance;
         public static LevelManager Instance
@@ -92,22 +90,23 @@ namespace Alchemy.Level
                 _gameField = new GameField(fieldWidth, fieldHeight, false, substrateParent, gameFieldParent);
             }
 
-            _currentLevel = 0;
-            InitNextLevel();
+            InitLevel();
         }
 
-        private void InitNextLevel()
+        private void InitLevel()
         {
             _timer = timeLimit;
-            _levelScore = 0;
-            _thresholdNext = _thresholdNext + thresholdDelta;
-            _thresholdCurrent = _thresholdNext;
-            _currentLevel++;
-
-            UILevelManager.Instance.SetLevel(_currentLevel);
-            UILevelManager.Instance.SetLevelScore(_levelScore);
-            UILevelManager.Instance.SetThresholdValue(_thresholdCurrent);
             UILevelManager.Instance.UpdateTimer(_timer);
+
+            // Инициализация словаря для ресурсов.
+            _resourceExtraction = new Dictionary<ResourceType, int>();
+            foreach (var resource in GameManager.Instance.LevelModel.resources)
+                _resourceExtraction.Add(resource.resourceType, 0);
+
+            // Количества ингредиентов в конце тура.
+            _ingredientResult = new Dictionary<IngredientType, int>();
+            foreach (var ingredient in GameManager.Instance.LevelModel.ingredientCosts)
+                _ingredientResult.Add(ingredient.ingredientType, 0);
         }
 
         // Таймеры.
@@ -115,16 +114,12 @@ namespace Alchemy.Level
         {
             if (!_isGameOver)
             {
-                // Уровень пройден. Перейти на следующий.
-                if (_levelScore >= _thresholdCurrent && _timer > 0)
-                {
-                    InitNextLevel();
-                }
-                // Игра проиграна.
-                else if (_timer <= 0 && _levelScore < _thresholdCurrent)
+                // Игра окончена.
+                if (_timer <= 0)
                 {
                     _gameField.DisableBlockTouch();
-                    UILevelManager.Instance.ShowDefeatScreen(_totalScore, _currentLevel);
+                    CalculateLevelIngredients();
+                    UILevelManager.Instance.ShowDefeatScreen();
                     _isGameOver = true;
                 }
                 else
@@ -183,14 +178,6 @@ namespace Alchemy.Level
                 if (_gameField.IsFieldFull)
                     _gameField = BlockDestroyer.DestroyField(_gameField);
 
-                // Начисление очков за полностью уничтоженное поле.
-                if (_gameField.IsFieldEmpty)
-                {
-                    _totalScore += (long)(fieldDestroyCoefficient * _thresholdCurrent);
-                    _levelScore += (long)(fieldDestroyCoefficient * _thresholdCurrent);
-                    UILevelManager.Instance.SetLevelScore(_levelScore);
-                }
-
                 // Обновить игровое поле.
                 _gameField.GenerateNewBlocks(gameFieldParent);
 
@@ -225,26 +212,18 @@ namespace Alchemy.Level
                 Dictionary<ResourceType, long> points = new Dictionary<ResourceType, long>();
 
                 // Уничтожение блоков ип.
-                DestroyBlocks(touched, ref points);
+                int destroyedCount = DestroyBlocks(touched, ref points);
 
                 // Некоторые блоки были уничтожены.
-                if (points.Any())
-                {
-                    long pts = GetTotalPoints(points);
-                    _levelScore += pts;
-                    _totalScore += pts;
-
-                    UILevelManager.Instance.SetLevelScore(_levelScore);
-
+                if (destroyedCount > 0)
                     _isTouched = true;
-                }
             }
         }
 
         /// <summary>
         /// Уничтожение блоков.
         /// </summary>
-        private void DestroyBlocks(BlockComponent touched, ref Dictionary<ResourceType, long> points)
+        private int DestroyBlocks(BlockComponent touched, ref Dictionary<ResourceType, long> points)
         {
             List<BlockComponent> destroyList = BlockDestroyer.GetMatchedElements(_gameField, touched);
 
@@ -254,9 +233,13 @@ namespace Alchemy.Level
                 _audioSource.Play();
                 destroyList.ForEach(i =>
                 {
+                    // Считаем количество добытых ресурсов.
+                    _resourceExtraction[i.type]++;
                     i.StartDestroy();
                 });
             }
+
+            return destroyList.Count;
         }
 
         public void SetFieldItemNull(int x, int y)
@@ -294,5 +277,31 @@ namespace Alchemy.Level
             _gameField.EnableBlockTouch();
         }
         #endregion
+
+        #region Доп. функции.
+
+        /// <summary>
+        /// Подсчет результатов.
+        /// </summary>
+        private void CalculateLevelIngredients()
+        {
+            foreach (var ingredientCost in GameManager.Instance.LevelModel.ingredientCosts)
+            {
+                if (ingredientCost.count == 0)
+                    continue;
+
+                _ingredientResult[ingredientCost.ingredientType] = _resourceExtraction[ingredientCost.resourceType] / ingredientCost.count;
+            }
+        }
+
+        #endregion
+
+        public void OnGUI()
+        {
+            foreach (var item in _resourceExtraction)
+            {
+                GUILayout.Label(item.Key.ToString() + " : " + item.Value);
+            }
+        }
     }
 }

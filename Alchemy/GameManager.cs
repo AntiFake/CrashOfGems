@@ -319,7 +319,8 @@ namespace Alchemy
                 potions = potionBonuses,
                 difficultyType = dflcType,
                 levelType = lvlType,
-                resources = GetLevelResources(lvlType, dflcType)
+                resources = GetLevelResources(lvlType, dflcType),
+                ingredientCosts = GetIngredientCost(lvlType, dflcType)
             };
         }
 
@@ -340,6 +341,19 @@ namespace Alchemy
                     low_boundary = rtl.low_boundary,
                     upper_boundary = rtl.top_boundary
                 }
+            ).ToList();
+        }
+
+        /// <summary>
+        /// Получить список конверсий ресурсов в ингридиенты.
+        /// </summary>
+        private List<IngredientCost> GetIngredientCost(LevelType lvlType, DifficultyType dflcType)
+        {
+            return (
+                from ic in applicationData.ingredientCosts
+                join rlvl in applicationData.resourcesToLevel on ic.resourceType equals rlvl.resourceType
+                where rlvl.levelType == lvlType && rlvl.difficultyType == dflcType
+                select ic
             ).ToList();
         }
 
