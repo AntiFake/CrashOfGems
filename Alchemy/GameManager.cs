@@ -24,18 +24,15 @@ namespace Alchemy
                 DontDestroyOnLoad(gameObject);
                 Instance = this;
             }
-            //else if (gameManager != this)
-            //{
-            //    Destroy(gameObject);
-            //}
 
             // Удалить. Для теста.
             playerData = new PlayerData();
             playerData.ingredients = new Dictionary<IngredientType, int>();
 
-            playerData.ingredients.Add(IngredientType.Mushroom, 100);
-            playerData.ingredients.Add(IngredientType.Root, 100);
-            playerData.ingredients.Add(IngredientType.Wood, 100);
+            playerData.ingredients.Add(IngredientType.КоралловыйОтросток, 100);
+            playerData.ingredients.Add(IngredientType.Перламутр, 100);
+            playerData.ingredients.Add(IngredientType.Чешуя, 100);
+            playerData.ingredients.Add(IngredientType.Щупальце, 100);
 
             playerData.potions = new Dictionary<PotionType, int>();
             playerData.potions.Add(PotionType.Fire_I, 5);
@@ -153,7 +150,7 @@ namespace Alchemy
                     sprite = iad.sprite,
                     count = i.Value
                 }
-                
+
             ).Union(
                 from p in playerData.potions
                 join pad in applicationData.potionList on p.Key equals pad.type
@@ -332,11 +329,11 @@ namespace Alchemy
         {
             return (
                 from r in applicationData.resources
-                join rtl in applicationData.resourcesToLevel on r.resourceType equals rtl.resourceType
+                join rtl in applicationData.resourcesToLevel on r.type equals rtl.resourceType
                 where rtl.difficultyType == dflcType && rtl.levelType == lvlType
                 select new ResourceLevelModel()
                 {
-                    resourceType = r.resourceType,
+                    resourceType = r.type,
                     sprite = r.sprite,
                     low_boundary = rtl.low_boundary,
                     upper_boundary = rtl.top_boundary
@@ -347,13 +344,22 @@ namespace Alchemy
         /// <summary>
         /// Получить список конверсий ресурсов в ингридиенты.
         /// </summary>
-        private List<IngredientCost> GetIngredientCost(LevelType lvlType, DifficultyType dflcType)
+        private List<IngredientCostLevelModel> GetIngredientCost(LevelType lvlType, DifficultyType dflcType)
         {
             return (
                 from ic in applicationData.ingredientCosts
+                join i in applicationData.ingredientList on ic.ingredientType equals i.type
+                join r in applicationData.resources on ic.resourceType equals r.type
                 join rlvl in applicationData.resourcesToLevel on ic.resourceType equals rlvl.resourceType
                 where rlvl.levelType == lvlType && rlvl.difficultyType == dflcType
-                select ic
+                select new IngredientCostLevelModel()
+                {
+                    conversionCost = ic.count,
+                    ingredientSprite = i.sprite,
+                    resourceSprite = r.sprite,
+                    resourceType = r.type,
+                    ingredientType = i.type
+                }
             ).ToList();
         }
 

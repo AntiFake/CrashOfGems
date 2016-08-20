@@ -76,7 +76,7 @@ namespace Alchemy.Level
         {
             int spriteNumber = GetRandomSpriteNumber();
 
-            var block = (GameObject)GameObject.Instantiate(prefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
+            var block = (GameObject) Instantiate(prefab, new Vector3(pos.x, pos.y, 0f), Quaternion.identity);
             block.name = string.Format("{0};{1}", x, y);
 
             SetBlockComponent(block, x, y, GameManager.Instance.LevelModel.resources[spriteNumber].resourceType);

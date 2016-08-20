@@ -63,7 +63,7 @@ namespace Alchemy.Level
         private bool _isTouched;
         private Dictionary<ResourceType, int> _resourceExtraction;
         private Dictionary<IngredientType, int> _ingredientResult;
-
+        
         private static LevelManager _instance;
         public static LevelManager Instance
         {
@@ -105,6 +105,7 @@ namespace Alchemy.Level
 
             // Количества ингредиентов в конце тура.
             _ingredientResult = new Dictionary<IngredientType, int>();
+
             foreach (var ingredient in GameManager.Instance.LevelModel.ingredientCosts)
                 _ingredientResult.Add(ingredient.ingredientType, 0);
         }
@@ -237,6 +238,9 @@ namespace Alchemy.Level
                     _resourceExtraction[i.type]++;
                     i.StartDestroy();
                 });
+
+                // Обновление интерфейса: сколько ресурсов осталось добыть на след. ингредиент.
+                UILevelManager.Instance.UpdateResourceStandings(destroyList.First().type, destroyList.Count);
             }
 
             return destroyList.Count;
@@ -287,10 +291,10 @@ namespace Alchemy.Level
         {
             foreach (var ingredientCost in GameManager.Instance.LevelModel.ingredientCosts)
             {
-                if (ingredientCost.count == 0)
+                if (ingredientCost.conversionCost == 0)
                     continue;
 
-                _ingredientResult[ingredientCost.ingredientType] = _resourceExtraction[ingredientCost.resourceType] / ingredientCost.count;
+                _ingredientResult[ingredientCost.ingredientType] = (int) _resourceExtraction[ingredientCost.resourceType] / ingredientCost.conversionCost;
             }
         }
 

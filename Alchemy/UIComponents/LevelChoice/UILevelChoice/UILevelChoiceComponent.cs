@@ -55,7 +55,7 @@ namespace Alchemy.UI
             }
 
             // default out.
-            levelType = LevelType.Forest;
+            levelType = LevelType.Лес;
             difficultyType = DifficultyType.I;
         }
     }

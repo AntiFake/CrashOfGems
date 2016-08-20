@@ -13,15 +13,16 @@ namespace Alchemy.Model
     }
     public enum IngredientType
     {
-        Root,
-        Wood,
-        Mushroom
+        Чешуя,
+        КоралловыйОтросток,
+        Щупальце,
+        Перламутр,
     }
     public enum LevelType
     {
-        Forest,
-        Mine,
-        Lake
+        Лес,
+        Рудник,
+        Озеро
     }
     public enum DifficultyType
     {
@@ -36,15 +37,24 @@ namespace Alchemy.Model
         GreenGrass,
         RedGrass,
         // Озеро
-        Star,
-        Coral,
-        Fish,
-        Shell
+        Звезда,
+        Коралл,
+        Рыба,
+        Раковина
     }
 
     #endregion
 
     #region Модели
+
+    public class IngredientCostLevelModel
+    {
+        public ResourceType resourceType;
+        public IngredientType ingredientType;
+        public Sprite resourceSprite;
+        public Sprite ingredientSprite;
+        public int conversionCost;
+    }
 
     public class ResourceLevelModel
     {
@@ -64,7 +74,7 @@ namespace Alchemy.Model
         public List<ResourceLevelModel> resources;
 
         // конверсия.
-        public List<IngredientCost> ingredientCosts;
+        public List<IngredientCostLevelModel> ingredientCosts;
     }
 
     public class LevelPreviewViewModel
@@ -135,7 +145,7 @@ namespace Alchemy.Model
     [Serializable]
     public class Resource
     {
-        public ResourceType resourceType;
+        public ResourceType type;
         public Sprite sprite;
     }
 

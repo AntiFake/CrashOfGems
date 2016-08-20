@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
+using Alchemy.Model;
+using System.Linq;
 
 namespace Alchemy.Level
 {
@@ -9,6 +12,8 @@ namespace Alchemy.Level
         #region Экран "Игра"
         public Button btnPause;
         public UITimerComponent timer;
+        public UIResourcesComponent resourceStandingsPanel;
+
         #endregion
 
         #region Экран "Пауза".
@@ -47,6 +52,12 @@ namespace Alchemy.Level
             goBtnRestart.onClick.AddListener(() => { OnRestartButtonClick(); });
         }
 
+        public void Start()
+        {
+            // Отображение "сколько осталось" накопить на следующий ингредиент.
+            resourceStandingsPanel.Visualize(GameManager.Instance.LevelModel.ingredientCosts);
+        }
+
         #region Функции управления ЭУ UI
 
         public void UpdateTimer(float timerValue)
@@ -57,6 +68,11 @@ namespace Alchemy.Level
         public void ShowDefeatScreen()
         {
             gameOverScreen.gameObject.SetActive(true);
+        }
+
+        public void UpdateResourceStandings(ResourceType rt, int destroyedCount)
+        {
+            resourceStandingsPanel.UpdateCounters(rt, destroyedCount);
         }
         #endregion
 
