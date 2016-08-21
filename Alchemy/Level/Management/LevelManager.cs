@@ -314,10 +314,7 @@ namespace Alchemy.Level
 
         public void OnGUI()
         {
-            //foreach (var item in _resourceExtraction)
-            //{
-            //    GUILayout.Label(item.Key.ToString() + " : " + item.Value);
-            //}
+            
         }
     }
 }

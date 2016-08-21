@@ -15,18 +15,19 @@ namespace Alchemy.UI
 
         public PotionType PotionType { get; set; }
 
-        private void Start()
-        {
-            button = GetComponent<Button>();
-            button.onClick.AddListener(() => ButtonOnClickEvent());
-        }
-
-        public void Visualize(Sprite icon, PotionType type)
+        public void Visualize(Sprite icon, PotionType type, bool enabled)
         {
             this.icon.sprite = icon;
             this.icon.color = nonactiveColor;
             PotionType = type;
             gameObject.SetActive(true);
+
+            // Если данное зелье есть у игрока, то он модет взять его на уровень, иначе иконка не кликабельна.
+            if (enabled)
+            {
+                button = GetComponent<Button>();
+                button.onClick.AddListener(() => ButtonOnClickEvent());
+            }
         }
 
         private void ButtonOnClickEvent()

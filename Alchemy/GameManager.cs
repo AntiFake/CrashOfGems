@@ -136,6 +136,17 @@ namespace Alchemy
         #region PlayerData
 
         #region public...
+
+        /// <summary>
+        /// Определяет есть ли у игрока зелье определенного типа.
+        /// </summary>
+        public bool HasPotion(PotionType type)
+        {
+            if (playerData.potions.ContainsKey(type) && playerData.potions[type] > 0)
+                return true;
+            return false;
+        }
+
         /// <summary>
         /// Получение ингредиентов и зелий игрока.
         /// </summary>
@@ -372,6 +383,15 @@ namespace Alchemy
                     ingredientType = i.type
                 }
             ).ToList();
+        }
+
+        /// <summary>
+        /// Удаление выбранных на уровень зелий со склада.
+        /// </summary>
+        public void ConsumeLevelPotions(List<PotionType> selectedPotions)
+        {
+            foreach (var item in selectedPotions)
+                UsePotion(item, 1);
         }
 
         #endregion

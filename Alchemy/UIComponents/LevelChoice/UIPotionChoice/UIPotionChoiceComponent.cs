@@ -14,7 +14,10 @@ namespace Alchemy.UI
             {
                 var potionBonus = Instantiate(potionChoiceItemInstance);
                 var comp = potionBonus.GetComponent<UIPotionChoiceItemComponent>();
-                comp.Visualize(item.sprite, item.type);
+
+
+                comp.Visualize(item.sprite, item.type, GameManager.Instance.HasPotion(item.type));
+
                 potionBonus.transform.SetParent(gameObject.transform, false);
             }
         }
