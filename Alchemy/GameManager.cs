@@ -215,6 +215,17 @@ namespace Alchemy
             // Создание указанного в рецепте количества зелий.
             AddPotion(potionType, recipe.productionCount);
         }
+
+        /// <summary>
+        /// Сохранение добытых ингредиентов на склад.
+        /// </summary>
+        /// <param name="ingredients"></param>
+        public void SaveIngredients(Dictionary<IngredientType, int> ingredients)
+        {
+            foreach (var i in ingredients)
+                AddIngredient(i.Key, i.Value);
+        }
+
         #endregion
 
         #region private...

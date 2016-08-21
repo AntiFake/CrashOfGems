@@ -118,9 +118,7 @@ namespace Alchemy.Level
                 // Игра окончена.
                 if (_timer <= 0)
                 {
-                    _gameField.DisableBlockTouch();
-                    CalculateLevelIngredients();
-                    UILevelManager.Instance.ShowDefeatScreen();
+                    LevelEndCallback();
                     _isGameOver = true;
                 }
                 else
@@ -258,11 +256,6 @@ namespace Alchemy.Level
             _startAnimationTime = Time.time;
         }
 
-        private long GetTotalPoints(Dictionary<ResourceType, long> points)
-        {
-            return points.Sum(i => i.Value);
-        }
-
         /// <summary>
         /// Функция, срабатываемая при установке паузы.
         /// </summary>
@@ -280,12 +273,31 @@ namespace Alchemy.Level
             _isPause = false;
             _gameField.EnableBlockTouch();
         }
+
+        /// <summary>
+        /// Функция вызывается по завершении уровня.
+        /// </summary>
+        public void LevelEndCallback()
+        {
+            // Не даем возможность производить клики по игровому полю.
+            _gameField.DisableBlockTouch();
+
+            // Подсчет собранных ингредиентов.
+            CalculateLevelIngredients();
+
+            // Сохранение ингредиентов.
+            GameManager.Instance.SaveIngredients(_ingredientResult);
+
+            // Отображение экрана с результатами.
+            UILevelManager.Instance.ShowDefeatScreen();
+        }
+
         #endregion
 
         #region Доп. функции.
 
         /// <summary>
-        /// Подсчет результатов.
+        /// Подсчет собранных ингредиентов.
         /// </summary>
         private void CalculateLevelIngredients()
         {
@@ -302,10 +314,10 @@ namespace Alchemy.Level
 
         public void OnGUI()
         {
-            foreach (var item in _resourceExtraction)
-            {
-                GUILayout.Label(item.Key.ToString() + " : " + item.Value);
-            }
+            //foreach (var item in _resourceExtraction)
+            //{
+            //    GUILayout.Label(item.Key.ToString() + " : " + item.Value);
+            //}
         }
     }
 }
